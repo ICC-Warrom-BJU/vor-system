@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Database, FileText, BarChart3, DollarSign, Settings, LogOut, GitCompare, MapPin, ClipboardCheck, CalendarClock } from 'lucide-react'
+import { LayoutDashboard, Database, BarChart3, DollarSign, Settings, LogOut, GitCompare, MapPin, ClipboardCheck, CalendarClock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '../contexts/AuthContext'
 import vorLogo from '@/assets/logo.png'

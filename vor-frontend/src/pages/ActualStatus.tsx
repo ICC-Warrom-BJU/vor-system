@@ -5,7 +5,7 @@ import { ColDef, ColGroupDef } from 'ag-grid-community'
 import * as XLSX from 'xlsx'
 import 'ag-grid-community/styles/ag-grid.css'
 import 'ag-grid-community/styles/ag-theme-quartz.css'
-import { Calendar, Save, Download, Activity, BarChart3, Truck, Zap, Copy, ArrowRight } from 'lucide-react'
+import { Calendar, Save, Download, Activity, Truck, Zap, Copy, ArrowRight } from 'lucide-react'
 import { addDays, eachDayOfInterval, endOfMonth, format, getDaysInMonth } from 'date-fns'
 import { id } from 'date-fns/locale'
 
@@ -265,7 +265,7 @@ export default function ActualStatus() {
     saveNotes(nextNotes)
 
     // Find existing row data (either from changedRows or rowData)
-    const currentRow = changedRows.get(vehicleId) || rowData.find(r => r.vehicleId === vehicleId)
+    const currentRow = changedRows.get(vehicleId) || rowData.find((r: RowData) => r.vehicleId === vehicleId)
     if (!currentRow) return
 
     const updatedRow = recalculateSummaryFields({
