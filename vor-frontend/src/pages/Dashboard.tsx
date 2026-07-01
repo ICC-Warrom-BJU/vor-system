@@ -250,7 +250,7 @@ export default function Dashboard() {
       entry.sumPA += u.pa
       entry.sumUA += u.ua
       return map
-    }, new Map<string, { type: string; count: number; sumPA: number; sumUA: number }>())
+    }, new Map<string, { type: string; count: number; sumPA: number; sumUA: number }>()).entries()
   ).map(([, entry]) => ({
     type: entry.type,
     pa: entry.sumPA / entry.count,
