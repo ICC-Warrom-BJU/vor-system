@@ -8,8 +8,8 @@ RUN npm install
 
 COPY vor-backend/ .
 
-RUN rm -rf prisma/migrations
+RUN npx prisma generate
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma migrate dev --name init 2>/dev/null; npm start"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
