@@ -2,9 +2,13 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+COPY vor-backend/package.json ./
+
+RUN npm install
+
 COPY vor-backend/ .
 
-RUN npm install && npx prisma generate
+RUN npx prisma generate
 
 EXPOSE 3000
 CMD ["npm", "start"]
