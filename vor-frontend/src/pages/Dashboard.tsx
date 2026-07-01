@@ -241,8 +241,7 @@ export default function Dashboard() {
   }).sort((a: any, b: any) => b.prod - a.prod)
 
   // Group by tipe unit untuk Ranking by Tipe Unit
-  const typeRankings = Array.from(
-    unitRankings.reduce((map: Map<string, { type: string; count: number; sumPA: number; sumUA: number }>, u: any) => {
+  const typeRankings = [...unitRankings.reduce((map: Map<string, { type: string; count: number; sumPA: number; sumUA: number }>, u: any) => {
       const t = u.type || 'Unknown'
       if (!map.has(t)) map.set(t, { type: t, count: 0, sumPA: 0, sumUA: 0 })
       const entry = map.get(t)!
@@ -251,7 +250,7 @@ export default function Dashboard() {
       entry.sumUA += u.ua
       return map
     }, new Map<string, { type: string; count: number; sumPA: number; sumUA: number }>()).entries()
-  ).map(([, entry]) => ({
+  ].map(([, entry]) => ({
     type: entry.type,
     pa: entry.sumPA / entry.count,
     ua: entry.sumUA / entry.count,
