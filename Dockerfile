@@ -2,13 +2,13 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY vor-backend/package*.json ./
 RUN npm ci
 
-COPY prisma ./prisma
+COPY vor-backend/prisma ./prisma
 RUN npx prisma generate
 
-COPY . .
+COPY vor-backend/ .
 
 EXPOSE 3000
 CMD ["npm", "start"]
