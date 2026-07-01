@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY vor-backend/ .
 
-RUN npm ci && npx prisma generate
+RUN npm install && npx prisma generate
 
 EXPOSE 3000
 CMD ["npm", "start"]
