@@ -30,7 +30,9 @@ const PORT = process.env.PORT || 3000
 // Middleware
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
-app.use(cors())
+app.use(cors({
+  origin: process.env.CORS_ORIGIN?.split(',').map(s => s.trim()) || '*',
+}))
 
 // Health check
 app.get('/api/health', (req, res) => {

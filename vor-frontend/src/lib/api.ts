@@ -1,7 +1,10 @@
-// src/lib/api.ts
 import axios from 'axios'
 
-const api = axios.create({ baseURL: '/api' })
+const baseURL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : '/api'
+
+const api = axios.create({ baseURL })
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('vor_token') // ← satu tempat saja
