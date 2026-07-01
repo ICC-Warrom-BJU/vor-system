@@ -1,0 +1,438 @@
+{
+  "ResponseCode": 1,
+  "ResponseMessage": "success 1 recs",
+  "Data": [
+    {
+      "gps_sn": "353691840314347",
+      "nopol": "D 7076 AT",
+      "vehicle_id": "VEH0168277",
+      "company_id": 6581,
+      "company_nm": "PT. BUMI JASA UTAMA (CABO)",
+      "tahun": 2026,
+      "bulan": 6,
+      "totalSum": {
+        "max_speed": 106,
+        "avg_speed": 37.00749222026789,
+        "total_km": 3798.921875,
+        "fuel_ratio": 0,
+        "fuelBySensor": 0,
+        "HB": 0,
+        "HA": 0,
+        "HC": 0,
+        "IC": 0,
+        "overSpeed_count": 6,
+        "dur_parking": {
+          "value": 366130.1600000001,
+          "text": "4 d, 5 h, 42 m"
+        },
+        "dur_idle": {
+          "value": 65738.95,
+          "text": "18 h, 15 m"
+        },
+        "dur_moving": {
+          "value": 369550,
+          "text": "4 d, 6 h, 39 m"
+        },
+        "dur_driving": {
+          "value": 443963.8399999999,
+          "text": "5 d, 3 h, 19 m"
+        },
+        "dur_overSpeed": {
+          "value": 99,
+          "text": "1 m, 39 s"
+        }
+      },
+      "day_1": {
+        "tripSum": {
+          "max_speed": 106,
+          "avg_speed": 35.359061547317026,
+          "total_km": 460.71875,
+          "fuel_ratio": 0,
+          "fuelBySensor": 0,
+          "HB": 0,
+          "HA": 0,
+          "HC": 0,
+          "IC": 0,
+          "overSpeed_count": 3,
+          "dur_parking": {
+            "value": 31426.01,
+            "text": "8 h, 43 m"
+          },
+          "dur_idle": {
+            "value": 6342.99,
+            "text": "1 h, 45 m"
+          },
+          "dur_moving": {
+            "value": 46907,
+            "text": "13 h, 1 m"
+          },
+          "dur_driving": {
+            "value": 53807.99,
+            "text": "14 h, 56 m"
+          },
+          "dur_overSpeed": {
+            "value": 64,
+            "text": "1 m, 4 s"
+          }
+        },
+        "dayofweek": "Monday",
+        "engine_first_start": "2026-06-01T06:58:45+07:00",
+        "engine_last_stop": "2026-06-01T23:22:55+07:00"
+      },
+      "day_2": {
+        "tripSum": {
+          "max_speed": 104,
+          "avg_speed": 37.800705950069975,
+          "total_km": 465.1796875,
+          "fuel_ratio": 0,
+          "fuelBySensor": 0,
+          "HB": 0,
+          "HA": 0,
+          "HC": 0,
+          "IC": 0,
+          "overSpeed_count": 1,
+          "dur_parking": {
+            "value": 32526.009999999995,
+            "text": "9 h, 2 m"
+          },
+          "dur_idle": {
+            "value": 6967,
+            "text": "1 h, 56 m"
+          },
+          "dur_moving": {
+            "value": 44302,
+            "text": "12 h, 18 m"
+          },
+          "dur_driving": {
+            "value": 52757.979999999996,
+            "text": "14 h, 39 m"
+          },
+          "dur_overSpeed": {
+            "value": 8,
+            "text": "8 s"
+          }
+        },
+        "dayofweek": "Tuesday",
+        "engine_first_start": "2026-06-02T05:57:59+07:00",
+        "engine_last_stop": "2026-06-03T00:01:10+07:00"
+      },
+      "day_3": {
+        "tripSum": {
+          "max_speed": 97,
+          "avg_speed": 38.53773390122466,
+          "total_km": 453.6640625,
+          "fuel_ratio": 0,
+          "fuelBySensor": 0,
+          "HB": 0,
+          "HA": 0,
+          "HC": 0,
+          "IC": 0,
+          "overSpeed_count": 0,
+          "dur_parking": {
+            "value": 34225.009999999995,
+            "text": "9 h, 30 m"
+          },
+          "dur_idle": {
+            "value": 7740.99,
+            "text": "2 h, 9 m"
+          },
+          "dur_moving": {
+            "value": 42379,
+            "text": "11 h, 46 m"
+          },
+          "dur_driving": {
+            "value": 51080.99,
+            "text": "14 h, 11 m"
+          },
+          "dur_overSpeed": {
+            "value": 0,
+            "text": ""
+          }
+        },
+        "dayofweek": "Wednesday",
+        "engine_first_start": "2026-06-03T05:51:37.01+07:00",
+        "engine_last_stop": "2026-06-03T22:41:39+07:00"
+      },
+      "day_4": {
+        "tripSum": {
+          "max_speed": 36,
+          "avg_speed": 6.901041666666667,
+          "total_km": 2.0703125,
+          "fuel_ratio": 0,
+          "fuelBySensor": 0,
+          "HB": 0,
+          "HA": 0,
+          "HC": 0,
+          "IC": 0,
+          "overSpeed_count": 0,
+          "dur_parking": {
+            "value": 83953.01,
+            "text": "23 h, 19 m"
+          },
+          "dur_idle": {
+            "value": 659,
+            "text": "10 m, 59 s"
+          },
+          "dur_moving": {
+            "value": 1080,
+            "text": "18 m"
+          },
+          "dur_driving": {
+            "value": 2066.99,
+            "text": "34 m, 26 s"
+          },
+          "dur_overSpeed": {
+            "value": 0,
+            "text": ""
+          }
+        },
+        "dayofweek": "Thursday",
+        "engine_first_start": "2026-06-04T05:50:58+07:00",
+        "engine_last_stop": "2026-06-04T10:51:02+07:00"
+      },
+      "day_5": {
+        "tripSum": {
+          "max_speed": 100,
+          "avg_speed": 39.47569385166939,
+          "total_km": 449.6171875,
+          "fuel_ratio": 0,
+          "fuelBySensor": 0,
+          "HB": 0,
+          "HA": 0,
+          "HC": 0,
+          "IC": 0,
+          "overSpeed_count": 0,
+          "dur_parking": {
+            "value": 32206.019999999997,
+            "text": "8 h, 56 m"
+          },
+          "dur_idle": {
+            "value": 11165.99,
+            "text": "3 h, 6 m"
+          },
+          "dur_moving": {
+            "value": 41003,
+            "text": "11 h, 23 m"
+          },
+          "dur_driving": {
+            "value": 53007.979999999996,
+            "text": "14 h, 43 m"
+          },
+          "dur_overSpeed": {
+            "value": 0,
+            "text": ""
+          }
+        },
+        "dayofweek": "Friday",
+        "engine_first_start": "2026-06-05T05:47:26.01+07:00",
+        "engine_last_stop": "2026-06-05T22:17:14+07:00"
+      },
+      "day_6": {
+        "tripSum": {
+          "max_speed": 103,
+          "avg_speed": 35.07018874193479,
+          "total_km": 454.4609375,
+          "fuel_ratio": 0,
+          "fuelBySensor": 0,
+          "HB": 0,
+          "HA": 0,
+          "HC": 0,
+          "IC": 0,
+          "overSpeed_count": 0,
+          "dur_parking": {
+            "value": 25940.019999999997,
+            "text": "7 h, 12 m"
+          },
+          "dur_idle": {
+            "value": 12627.99,
+            "text": "3 h, 30 m"
+          },
+          "dur_moving": {
+            "value": 46651,
+            "text": "12 h, 57 m"
+          },
+          "dur_driving": {
+            "value": 60074.979999999996,
+            "text": "16 h, 41 m"
+          },
+          "dur_overSpeed": {
+            "value": 0,
+            "text": ""
+          }
+        },
+        "dayofweek": "Saturday",
+        "engine_first_start": "2026-06-06T05:31:53.01+07:00",
+        "engine_last_stop": "2026-06-06T23:53:55+07:00"
+      },
+      "day_7": {
+        "tripSum": {
+          "max_speed": 104,
+          "avg_speed": 35.31048776561494,
+          "total_km": 456.9765625,
+          "fuel_ratio": 0,
+          "fuelBySensor": 0,
+          "HB": 0,
+          "HA": 0,
+          "HC": 0,
+          "IC": 0,
+          "overSpeed_count": 1,
+          "dur_parking": {
+            "value": 35103.02,
+            "text": "9 h, 45 m"
+          },
+          "dur_idle": {
+            "value": 2814,
+            "text": "46 m, 54 s"
+          },
+          "dur_moving": {
+            "value": 46590,
+            "text": "12 h, 56 m"
+          },
+          "dur_driving": {
+            "value": 50566.979999999996,
+            "text": "14 h, 2 m"
+          },
+          "dur_overSpeed": {
+            "value": 21,
+            "text": "21 s"
+          }
+        },
+        "dayofweek": "Sunday",
+        "engine_first_start": "2026-06-07T05:49:05+07:00",
+        "engine_last_stop": "2026-06-07T23:39:02+07:00"
+      },
+      "day_8": {
+        "tripSum": {
+          "max_speed": 96,
+          "avg_speed": 37.3419434430914,
+          "total_km": 471.8984375,
+          "fuel_ratio": 0,
+          "fuelBySensor": 0,
+          "HB": 0,
+          "HA": 0,
+          "HC": 0,
+          "IC": 0,
+          "overSpeed_count": 0,
+          "dur_parking": {
+            "value": 30725.01,
+            "text": "8 h, 32 m"
+          },
+          "dur_idle": {
+            "value": 6935,
+            "text": "1 h, 55 m"
+          },
+          "dur_moving": {
+            "value": 45494,
+            "text": "12 h, 38 m"
+          },
+          "dur_driving": {
+            "value": 53695.99,
+            "text": "14 h, 54 m"
+          },
+          "dur_overSpeed": {
+            "value": 0,
+            "text": ""
+          }
+        },
+        "dayofweek": "Monday",
+        "engine_first_start": "2026-06-08T05:01:56+07:00",
+        "engine_last_stop": "2026-06-08T23:54:20+07:00"
+      },
+      "day_9": {
+        "tripSum": {
+          "max_speed": 104,
+          "avg_speed": 37.300191269895485,
+          "total_km": 455.03125,
+          "fuel_ratio": 0,
+          "fuelBySensor": 0,
+          "HB": 0,
+          "HA": 0,
+          "HC": 0,
+          "IC": 0,
+          "overSpeed_count": 1,
+          "dur_parking": {
+            "value": 32767.019999999997,
+            "text": "9 h, 6 m"
+          },
+          "dur_idle": {
+            "value": 8208,
+            "text": "2 h, 16 m"
+          },
+          "dur_moving": {
+            "value": 43917,
+            "text": "12 h, 11 m"
+          },
+          "dur_driving": {
+            "value": 53144.979999999996,
+            "text": "14 h, 45 m"
+          },
+          "dur_overSpeed": {
+            "value": 6,
+            "text": "6 s"
+          }
+        },
+        "dayofweek": "Tuesday",
+        "engine_first_start": "2026-06-09T05:50:01+07:00",
+        "engine_last_stop": "2026-06-09T23:09:57+07:00"
+      },
+      "day_10": {
+        "tripSum": {
+          "max_speed": 86,
+          "avg_speed": 41.46226730203973,
+          "total_km": 129.3046875,
+          "fuel_ratio": 0,
+          "fuelBySensor": 0,
+          "HB": 0,
+          "HA": 0,
+          "HC": 0,
+          "IC": 0,
+          "overSpeed_count": 0,
+          "dur_parking": {
+            "value": 27259.029999999995,
+            "text": "7 h, 34 m"
+          },
+          "dur_idle": {
+            "value": 2277.99,
+            "text": "37 m, 57 s"
+          },
+          "dur_moving": {
+            "value": 11227,
+            "text": "3 h, 7 m"
+          },
+          "dur_driving": {
+            "value": 13758.98,
+            "text": "3 h, 49 m"
+          },
+          "dur_overSpeed": {
+            "value": 0,
+            "text": ""
+          }
+        },
+        "dayofweek": "Wednesday",
+        "engine_first_start": "2026-06-10T06:05:18.01+07:00",
+        "engine_last_stop": "2026-06-10T10:42:34+07:00"
+      },
+      "day_11": null,
+      "day_12": null,
+      "day_13": null,
+      "day_14": null,
+      "day_15": null,
+      "day_16": null,
+      "day_17": null,
+      "day_18": null,
+      "day_19": null,
+      "day_20": null,
+      "day_21": null,
+      "day_22": null,
+      "day_23": null,
+      "day_24": null,
+      "day_25": null,
+      "day_26": null,
+      "day_27": null,
+      "day_28": null,
+      "day_29": null,
+      "day_30": null,
+      "day_31": null
+    }
+  ]
+}

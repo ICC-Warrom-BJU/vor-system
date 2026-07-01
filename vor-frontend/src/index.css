@@ -1,0 +1,171 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.5s ease-out forwards;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+    --ag-grid-size: 8px;
+    --ag-icon-size: 16px;
+    --ag-row-height: 40px;
+    --ag-header-height: 50px;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* AG-Grid Custom Styling */
+.ag-theme-quartz {
+  --ag-foreground-color: rgb(31, 35, 44);
+  --ag-background-color: #ffffff;
+  --ag-header-background-color: #f3f4f6;
+  --ag-header-foreground-color: rgb(101, 109, 124);
+  --ag-header-cell-padding: 12px 4px;
+  --ag-row-border-color: #e5e7eb;
+  --ag-cell-border-color: #e5e7eb;
+}
+
+.ag-theme-quartz .ag-header-cell {
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
+
+.ag-theme-quartz .ag-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.ag-theme-quartz .ag-pinned-left-cols-container {
+  border-right: 1px solid #e5e7eb;
+}
+
+.ag-theme-quartz .ag-cell select {
+  outline: none;
+}
+
+.ag-theme-quartz .ag-cell select:focus {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1), 0 0 0 1px rgb(59, 130, 246);
+}
+
+.actual-status-grid {
+  --ag-header-background-color: #f8fafc;
+  --ag-odd-row-background-color: #fbfdff;
+  --ag-row-hover-color: #f1f5f9;
+  --ag-selected-row-background-color: #eef6ff;
+  --ag-header-cell-hover-background-color: #edf2f7;
+}
+
+.actual-status-grid .ag-header-group-cell {
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  justify-content: center;
+}
+
+.actual-status-grid .ag-header-group-cell-label,
+.actual-status-grid .ag-header-cell-label {
+  justify-content: center;
+}
+
+.actual-status-grid .ag-header-cell-text {
+  white-space: pre-line;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.actual-status-grid .ag-pinned-left-header,
+.actual-status-grid .ag-pinned-left-cols-container {
+  box-shadow: 6px 0 12px -12px rgba(15, 23, 42, 0.75);
+  z-index: 2;
+}
+
+.actual-status-grid .actual-status-identity-cell {
+  justify-content: flex-start;
+  padding: 0 12px;
+  color: #334155;
+  font-size: 13px;
+}
+
+.actual-status-grid .actual-status-nopol-cell {
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.actual-status-grid .actual-status-cell {
+  padding: 0;
+}
+
+.actual-status-select {
+  appearance: none;
+  border-radius: 6px;
+  padding: 0 8px;
+  text-align: center;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+}
+
+.actual-status-select:hover {
+  transform: translateY(-1px);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.12), 0 6px 12px -10px rgba(15, 23, 42, 0.85);
+}

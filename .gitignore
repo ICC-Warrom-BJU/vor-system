@@ -1,0 +1,26 @@
+node_modules
+dist
+dist-ssr
+*.log
+*.local
+.env
+.env.local
+.env.development.local
+.env.production.local
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Prisma generated
+/generated/prisma

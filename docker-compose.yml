@@ -1,0 +1,43 @@
+version: '3.9'
+
+services:
+
+  # ─── PostgreSQL ───────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: vor_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       vor_db
+      POSTGRES_USER:     vor_user
+      POSTGRES_PASSWORD: vor_pass_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vor_user -d vor_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis ────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: vor_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# ─── Volumes (data persisten) ──────────────────────
+volumes:
+  pgdata:
+  redisdata:

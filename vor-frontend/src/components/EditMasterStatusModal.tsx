@@ -1,0 +1,258 @@
+import { useState, useEffect } from 'react'
+import { X } from 'lucide-react'
+
+const StatusColors: { [key: string]: string } = {
+  UTI: '#C0DD97',
+  RFU: '#9FE1CB',
+  BD: '#5DCAA5',
+  C: '#B5D4F4',
+  MB: '#85B7EB',
+  RB: '#F7C1C1',
+  AM: '#FAC775',
+  BT: '#F4C0D1',
+  TAD: '#D3D1C7',
+  L: '#B4B2A9',
+  AT: '#8A8A8A',
+}
+
+interface EditMasterStatusModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onSuccess: () => void
+  status: any
+}
+
+export default function EditMasterStatusModal({ isOpen, onClose, onSuccess, status }: EditMasterStatusModalProps) {
+  const [formData, setFormData] = useState({
+    code: '',
+    description: '',
+    groupStatus: '',
+    color: '',
+    isPA: false,
+    isUA: false,
+    isProductivity: false,
+    canCopyNextDay: true,
+    forecastAllowed: true,
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (status) {
+      setFormData({
+        code: status.code || '',
+        description: status.description || '',
+        groupStatus: status.groupStatus || '',
+        color: status.color || StatusColors[status.code] || '',
+        isPA: status.isPA || false,
+        isUA: status.isUA || false,
+        isProductivity: status.isProductivity || false,
+        canCopyNextDay: status.canCopyNextDay !== false,
+        forecastAllowed: status.forecastAllowed !== false,
+      })
+    }
+  }, [status])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+
+    // Validation
+    if (!formData.description.trim()) {
+      setError('Deskripsi harus diisi')
+      return
+    }
+    if (!formData.groupStatus.trim()) {
+      setError('Group Status harus diisi')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`/api/master-status/code/${status.code}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          description: formData.description,
+          groupStatus: formData.groupStatus,
+          color: formData.color,
+          isPA: formData.isPA,
+          isUA: formData.isUA,
+          isProductivity: formData.isProductivity,
+          canCopyNextDay: formData.canCopyNextDay,
+          forecastAllowed: formData.forecastAllowed,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        onSuccess()
+        onClose()
+      } else {
+        setError(data.message || 'Gagal mengubah status')
+      }
+    } catch (err) {
+      setError('Error mengubah status')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">Edit Jenis Status</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {error && (
+            <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+              {error}
+            </div>
+          )}
+
+          {/* Code (read-only) */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Code</label>
+            <input
+              type="text"
+              value={formData.code}
+              disabled
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+            <input
+              type="text"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              placeholder="Masukkan deskripsi"
+            />
+          </div>
+
+          {/* Group Status */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Group Status</label>
+            <input
+              type="text"
+              value={formData.groupStatus}
+              onChange={(e) => setFormData({ ...formData, groupStatus: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              placeholder="Masukkan group status"
+            />
+          </div>
+
+          {/* Color */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Warna</label>
+            <div className="flex gap-2">
+              <input
+                type="color"
+                value={formData.color}
+                onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+              />
+              <input
+                type="text"
+                value={formData.color}
+                onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm"
+                placeholder="#000000"
+              />
+            </div>
+          </div>
+
+          {/* Indicators */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Indikator</label>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={formData.isPA}
+                  onChange={(e) => setFormData({ ...formData, isPA: e.target.checked })}
+                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">PA (Productive Available)</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={formData.isUA}
+                  onChange={(e) => setFormData({ ...formData, isUA: e.target.checked })}
+                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">UA (Utilized Available)</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={formData.isProductivity}
+                  onChange={(e) => setFormData({ ...formData, isProductivity: e.target.checked })}
+                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">PROD (Productivity)</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Flags */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={formData.canCopyNextDay}
+                onChange={(e) => setFormData({ ...formData, canCopyNextDay: e.target.checked })}
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">Dapat Copy ke Hari Berikutnya</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={formData.forecastAllowed}
+                onChange={(e) => setFormData({ ...formData, forecastAllowed: e.target.checked })}
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">Diizinkan untuk Forecast</span>
+            </label>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex gap-2 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 px-4 py-2 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-lg hover:from-emerald-600 hover:to-cyan-600 disabled:opacity-50 transition-colors"
+            >
+              {loading ? 'Menyimpan...' : 'Simpan'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}

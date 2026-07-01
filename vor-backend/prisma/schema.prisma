@@ -1,0 +1,289 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Master Data ────────────────────────────────
+
+model Vehicle {
+  id                String   @id @default(cuid())
+  nopol             String   @unique
+  vehicleType       String
+  tonase            Float?
+  kubikasi          Float?
+  nomorRangka       String?
+  detailUnit        String?
+  nomorLambung      String?
+  isActive          Boolean  @default(true)
+  targetRevenue     Float?   // target revenue per bulan
+  cabang            String
+  branchId          String?
+  branch            Branch?  @relation(fields: [branchId], references: [id])
+  customerId        String?
+  driverId          String?
+  customer          Customer? @relation(fields: [customerId], references: [id])
+  driver            Driver?   @relation(fields: [driverId], references: [id])
+  actualStatus      ActualStatus[]
+  forecastStatus    ForecastStatus[]
+  forecastDeviation ForecastDeviation[]
+  revenueData       RevenueData[]
+  gpsTracking       GpsTracking[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Branch {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  code        String?   @unique
+  description String?
+  vehicles    Vehicle[]
+  drivers     Driver[]
+  customers   Customer[]
+  users       User[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model VehicleType {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Customer {
+  id          String    @id @default(cuid())
+  name        String
+  phone       String?
+  email       String?
+  pic         String?
+  address     String?
+  cabang      String?
+  branchId    String?
+  branch      Branch?   @relation(fields: [branchId], references: [id])
+  isActive    Boolean   @default(true)
+  vehicles    Vehicle[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Driver {
+  id        String    @id @default(cuid())
+  nid       String?   @unique
+  name      String
+  phone     String?
+  simType   String?
+  simExpiry DateTime?
+  address   String?
+  joinDate  DateTime?
+  cabang    String?
+  branchId  String?
+  branch    Branch?   @relation(fields: [branchId], references: [id])
+  isActive  Boolean   @default(true)
+  notes     String?
+  vehicles  Vehicle[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model MasterStatus {
+  id             String  @id @default(cuid())
+  code           String  @unique  // UTI, RFU, BD, dst
+  description    String
+  groupStatus    String           // UTILISASI, BREAKDOWN, dst
+  color          String?
+  isPA           Boolean @default(false)
+  isUA           Boolean @default(false)
+  isProductivity Boolean @default(false)
+  canCopyNextDay Boolean @default(true)
+  forecastAllowed Boolean @default(true)
+  actualStatuses ActualStatus[] @relation("ActualStatusMaster")
+  forecastStatuses ForecastStatus[] @relation("ForecastStatusMaster")
+  forecastDeviationForecasts ForecastDeviation[] @relation("ForecastStatusCode")
+  forecastDeviationActuals ForecastDeviation[] @relation("ActualStatusCode")
+}
+
+// ─── Operasional ────────────────────────────────
+
+model ActualStatus {
+  id          String   @id @default(cuid())
+  vehicleId   String
+  statusCode  String
+  notes       String?
+  date        DateTime
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
+  status      MasterStatus @relation("ActualStatusMaster", fields: [statusCode], references: [code])
+  createdBy   String
+  updatedBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([vehicleId, date])  // 1 status per unit per hari
+  @@index([date])
+  @@index([statusCode])
+}
+
+model ForecastStatus {
+  id         String   @id @default(cuid())
+  vehicleId  String
+  statusCode String
+  date       DateTime
+  confidence Float?
+  notes      String?
+  vehicle    Vehicle  @relation(fields: [vehicleId], references: [id])
+  status     MasterStatus @relation("ForecastStatusMaster", fields: [statusCode], references: [code])
+  createdBy  String
+  updatedBy  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([vehicleId, date])
+  @@index([date])
+  @@index([statusCode])
+}
+
+model DailyKPI {
+  id              String   @id @default(cuid())
+  date            DateTime @unique
+  KPA             Float
+  UA              Float
+  PA              Float
+  availableCount  Int
+  utilizedCount   Int
+  productiveCount Int
+  totalVehicles   Int
+  calculatedBy    String?
+  calculatedAt    DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model WeeklyKPI {
+  id              String   @id @default(cuid())
+  startDate       DateTime @unique
+  KPA             Float
+  UA              Float
+  PA              Float
+  availableCount  Int
+  utilizedCount   Int
+  productiveCount Int
+  totalVehicles   Int
+  calculatedBy    String?
+  calculatedAt    DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model MonthlyKPI {
+  id              String   @id @default(cuid())
+  yearMonth       String   @unique
+  KPA             Float
+  UA              Float
+  PA              Float
+  availableCount  Int
+  utilizedCount   Int
+  productiveCount Int
+  totalVehicles   Int
+  calculatedBy    String?
+  calculatedAt    DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ForecastDeviation {
+  id                 String   @id @default(cuid())
+  vehicleId          String
+  date               DateTime
+  forecastStatusCode String
+  actualStatusCode   String
+  isDeviated         Boolean
+  accuracy           Float    @default(100)
+  deviationNotes     String?
+  recordedBy         String?
+  vehicle            Vehicle @relation(fields: [vehicleId], references: [id])
+  forecastStatus     MasterStatus @relation("ForecastStatusCode", fields: [forecastStatusCode], references: [code])
+  actualStatus       MasterStatus @relation("ActualStatusCode", fields: [actualStatusCode], references: [code])
+  createdAt          DateTime @default(now())
+
+  @@unique([vehicleId, date])
+  @@index([date])
+  @@index([forecastStatusCode])
+  @@index([actualStatusCode])
+}
+
+model RevenueData {
+  id           String   @id @default(cuid())
+  vehicleId    String
+  date         DateTime
+  tripCount    Int
+  totalRevenue Float
+  fuelExpense  Float
+  otherExpense Float    @default(0)
+  profit       Float
+  notes        String?
+  vehicle      Vehicle  @relation(fields: [vehicleId], references: [id])
+  recordedBy   String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([vehicleId, date])
+  @@index([date])
+}
+
+model GpsTracking {
+  id            String   @id @default(cuid())
+  vehicleId     String
+  date          DateTime
+  totalDistance Float    // KM
+  drivingTime   Int      // detik
+  movingTime    Int      // detik
+  parkingTime   Int      // detik
+  idleTime      Int      // detik
+  maxSpeed      Float?   // km/h
+  ratioSpeed    Float?   // rasio kecepatan
+
+  vehicle       Vehicle  @relation(fields: [vehicleId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([vehicleId, date])
+  @@index([date])
+  @@index([vehicleId])
+}
+
+model User {
+  id                  String   @id @default(cuid())
+  name                String
+  email               String   @unique
+  password            String
+  role                Role     @default(PLANNER)
+  cabang              String?
+  branchId            String?
+  branch              Branch?  @relation(fields: [branchId], references: [id])
+  isActive            Boolean  @default(true)
+  allowedVehicleTypes String[] @default([])
+  createdAt           DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  entity    String
+  entityId  String?
+  before    Json?
+  after     Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+enum Role {
+  ADMIN
+  PLANNER
+  SUPERVISOR
+  MANAGEMENT
+}
