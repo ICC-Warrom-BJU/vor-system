@@ -107,7 +107,7 @@ function getUAClass(value: number): string {
 const UA_LEGEND_CLASS = 'inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-300 text-blue-700'
 
 export default function Dashboard() {
-  const [selectedUnitType, setSelectedUnitType] = useState('All')
+  const [selectedUnitType, _setSelectedUnitType] = useState('All')
   const [selectedBranchId, setSelectedBranchId] = useState('')
 
   const today = new Date()
@@ -226,11 +226,6 @@ export default function Dashboard() {
     kpiDashboard?.data?.summary?.UA?.avg ??
     0
 
-  const prodValue =
-    fleetOverview?.data?.summary?.PA?.avg ??
-    kpiDashboard?.data?.summary?.PA?.avg ??
-    0
-
   const totalArmada = fleetOverview?.data?.totalVehicles ?? 0
 
   const rankingUnits = revenueDashboard?.data?.topPerformers ?? []
@@ -255,7 +250,7 @@ export default function Dashboard() {
       entry.sumPA += u.pa
       entry.sumUA += u.ua
       return map
-    }, new Map())
+    }, new Map<string, { type: string; count: number; sumPA: number; sumUA: number }>())
   ).map(([, entry]) => ({
     type: entry.type,
     pa: entry.sumPA / entry.count,

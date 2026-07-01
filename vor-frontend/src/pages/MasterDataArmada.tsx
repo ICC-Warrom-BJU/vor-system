@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { 
   LayoutGrid, List, Search, Plus, Truck, CheckCircle2, 
-  XCircle, Weight, Edit2, Trash2, Package, User, MoreVertical 
+  XCircle, Weight, Edit2, Trash2, Package, User 
 } from 'lucide-react'
 
 const masterDataStyles = `
@@ -33,7 +33,7 @@ export default function MasterDataArmada() {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState<'all' | 'aktif' | 'nonaktif'>('all')
 
-  const { data: vehicles, isLoading } = useQuery({
+  const { data: vehicles } = useQuery({
     queryKey: ['vehicles'],
     queryFn: async () => {
       const token = localStorage.getItem('token')
