@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Calendar, Save, Download, CalendarRange } from 'lucide-react'
 
@@ -16,6 +16,8 @@ export default function ForecastStatus() {
   const [copyTargetDate, setCopyTargetDate] = useState(new Date().toISOString().split('T')[0])
   const [copyGenerating, setCopyGenerating] = useState(false)
   const [copyResult, setCopyResult] = useState<{ total: number; success: number; failed: number; errors: string[] } | null>(null)
+  type FormValue = { statusCode: string; confidence: 'HIGH' | 'MEDIUM' | 'LOW'; notes: string }
+  const [formValues, setFormValues] = useState<Record<string, FormValue>>({})
   const queryClient = useQueryClient()
 
   const { data: forecastStatus } = useQuery({
@@ -51,6 +53,22 @@ export default function ForecastStatus() {
     },
   })
 
+  useEffect(() => {
+    if (!forecastStatus?.data) {
+      setFormValues({})
+      return
+    }
+    const values: Record<string, FormValue> = {}
+    forecastStatus.data.forEach((s: any) => {
+      values[s.vehicleId] = {
+        statusCode: s.status?.code || s.statusCode || '',
+        confidence: s.confidence >= 75 ? 'HIGH' : s.confidence >= 50 ? 'MEDIUM' : 'LOW',
+        notes: s.notes || '',
+      }
+    })
+    setFormValues(values)
+  }, [selectedDate])
+
   const handleSave = async () => {
     setSaving(true)
     setSaveMessage('')
@@ -66,22 +84,15 @@ export default function ForecastStatus() {
         notes: string
       }> = []
 
-      const tableRows = document.querySelectorAll('tbody tr')
-      tableRows.forEach((row) => {
-        const vehicleId = row.getAttribute('data-vehicle-id')
-        const statusSelect = row.querySelector('select') as HTMLSelectElement
-        const confidenceSelect = row.querySelectorAll('select')[1] as HTMLSelectElement
-        const notesInput = row.querySelector('input') as HTMLInputElement
-
-        if (vehicleId && statusSelect && statusSelect.value) {
-          updates.push({
-            vehicleId,
-            date: selectedDate,
-            statusCode: statusSelect.value,
-            confidence: confidenceSelect?.value === 'HIGH' ? 100 : confidenceSelect?.value === 'MEDIUM' ? 50 : 25,
-            notes: notesInput?.value || '',
-          })
-        }
+      Object.entries(formValues).forEach(([vehicleId, value]) => {
+        if (!value.statusCode) return
+        updates.push({
+          vehicleId,
+          date: selectedDate,
+          statusCode: value.statusCode,
+          confidence: value.confidence === 'HIGH' ? 100 : value.confidence === 'MEDIUM' ? 50 : 25,
+          notes: value.notes,
+        })
       })
 
       if (updates.length === 0) {
@@ -138,31 +149,22 @@ export default function ForecastStatus() {
         }
       })
 
-      const tableRows = document.querySelectorAll('tbody tr')
+      const currentVehicles = filteredVehicles
       let filled = 0
 
-      tableRows.forEach((row) => {
-        const vehicleId = row.getAttribute('data-vehicle-id')
-        const actualStatus = vehicleId ? actualByVehicle.get(vehicleId) : null
-        if (!vehicleId || !actualStatus) {
-          return
-        }
-
-        const statusSelect = row.querySelector('select') as HTMLSelectElement
-        const confidenceSelect = row.querySelectorAll('select')[1] as HTMLSelectElement
-        const notesInput = row.querySelector('input') as HTMLInputElement
-
-        if (statusSelect) {
-          statusSelect.value = actualStatus.status?.code || actualStatus.statusCode || statusSelect.value
-        }
-        if (confidenceSelect) {
-          confidenceSelect.value = 'HIGH'
-        }
-        if (notesInput) {
-          notesInput.value = actualStatus.notes || ''
-        }
-
-        filled += 1
+      setFormValues((prev) => {
+        const next = { ...prev }
+        currentVehicles.forEach((vehicle: any) => {
+          const actualStatus = actualByVehicle.get(vehicle.id)
+          if (!actualStatus) return
+          next[vehicle.id] = {
+            statusCode: actualStatus.status?.code || actualStatus.statusCode || next[vehicle.id]?.statusCode || '',
+            confidence: 'HIGH',
+            notes: actualStatus.notes || '',
+          }
+          filled += 1
+        })
+        return next
       })
 
       if (filled === 0) {
@@ -238,8 +240,7 @@ export default function ForecastStatus() {
   const filteredVehicles = useMemo(() => {
     if (!vehicles?.data) return []
     return vehicles.data.filter((vehicle: any) => {
-      const status = forecastStatus?.data?.find((s: any) => s.vehicleId === vehicle.id)
-      const statusCode = status?.status?.code || status?.statusCode || ''
+      const statusCode = formValues[vehicle.id]?.statusCode || ''
       const vehicleType = vehicle.vehicleType || ''
       const nopol = vehicle.nopol || ''
       const matchesNopol = !searchNopol || nopol.toLowerCase().includes(searchNopol.toLowerCase())
@@ -247,7 +248,7 @@ export default function ForecastStatus() {
       const matchesType = !searchType || vehicleType.toLowerCase().includes(searchType.toLowerCase())
       return matchesNopol && matchesStatus && matchesType
     })
-  }, [vehicles?.data, forecastStatus?.data, searchNopol, searchStatus, searchType])
+  }, [vehicles?.data, formValues, searchNopol, searchStatus, searchType])
 
   const statusGroupSummary = useMemo(() => {
     const counts = new Map<string, number>()
@@ -410,9 +411,11 @@ export default function ForecastStatus() {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredVehicles.length > 0 ? (
                 filteredVehicles.map((vehicle: any) => {
-                  const status = forecastStatus?.data?.find((s: any) => s.vehicleId === vehicle.id)
+                  const selectedCode = formValues[vehicle.id]?.statusCode || ''
+                  const selectedMs = masterStatuses?.data?.find((ms: any) => ms.code === selectedCode)
+                  const confidenceVal = formValues[vehicle.id]?.confidence || 'HIGH'
                   return (
-                    <tr key={vehicle.id} data-vehicle-id={vehicle.id} className="hover:bg-gray-50">
+                    <tr key={vehicle.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {vehicle.nopol}
                       </td>
@@ -420,10 +423,11 @@ export default function ForecastStatus() {
                         {vehicle.vehicleType || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div className="rounded-lg p-1" style={getStatusBackgroundStyle(status?.status?.color)}>
+                        <div className="rounded-lg p-1" style={getStatusBackgroundStyle(selectedMs?.color)}>
                           <select
                             className="w-full border border-gray-300 rounded-lg px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white"
-                            defaultValue={status?.status?.code || ''}
+                            value={selectedCode}
+                            onChange={(e) => setFormValues((prev) => ({ ...prev, [vehicle.id]: { ...prev[vehicle.id] || { confidence: 'HIGH', notes: '' }, statusCode: e.target.value } }))}
                           >
                             <option value="">Pilih status</option>
                             {masterStatuses?.data?.map((ms: any) => (
@@ -436,10 +440,9 @@ export default function ForecastStatus() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <select
-                          className={`border border-gray-300 rounded-lg px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${getConfidenceClass(
-                            status ? (status.confidence >= 75 ? 'HIGH' : status.confidence >= 50 ? 'MEDIUM' : 'LOW') : 'HIGH'
-                          )}`}
-                          defaultValue={status ? (status.confidence >= 75 ? 'HIGH' : status.confidence >= 50 ? 'MEDIUM' : 'LOW') : 'HIGH'}
+                          className={`border border-gray-300 rounded-lg px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${getConfidenceClass(confidenceVal)}`}
+                          value={confidenceVal}
+                          onChange={(e) => setFormValues((prev) => ({ ...prev, [vehicle.id]: { ...prev[vehicle.id] || { statusCode: '', notes: '' }, confidence: e.target.value as 'HIGH' | 'MEDIUM' | 'LOW' } }))}
                         >
                           <option value="HIGH">High</option>
                           <option value="MEDIUM">Medium</option>
@@ -451,7 +454,8 @@ export default function ForecastStatus() {
                           type="text"
                           className="border border-gray-300 rounded-lg px-3 py-1 w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                           placeholder="Catatan..."
-                          defaultValue={status?.notes || ''}
+                          value={formValues[vehicle.id]?.notes || ''}
+                          onChange={(e) => setFormValues((prev) => ({ ...prev, [vehicle.id]: { ...prev[vehicle.id] || { statusCode: '', confidence: 'HIGH' }, notes: e.target.value } }))}
                         />
                       </td>
                     </tr>
