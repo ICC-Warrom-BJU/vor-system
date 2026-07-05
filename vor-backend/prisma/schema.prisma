@@ -215,15 +215,16 @@ model ForecastDeviation {
 }
 
 model RevenueData {
-  id           String   @id @default(cuid())
-  vehicleId    String
-  date         DateTime
-  tripCount    Int
-  totalRevenue Float
-  fuelExpense  Float
-  otherExpense Float    @default(0)
-  profit       Float
-  notes        String?
+  id             String   @id @default(cuid())
+  vehicleId      String
+  date           DateTime
+  deliveryOrder  String?
+  tripCount      Int
+  totalRevenue   Float
+  fuelExpense    Float
+  otherExpense   Float    @default(0)
+  profit         Float
+  notes          String?
   vehicle      Vehicle  @relation(fields: [vehicleId], references: [id])
   recordedBy   String
   createdAt    DateTime @default(now())

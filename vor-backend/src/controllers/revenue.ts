@@ -7,6 +7,7 @@ import { getVehicleCabangFilter, getCabangFilter } from '../utils/cabangFilter'
 const createRevenueDataSchema = z.object({
   vehicleId: z.string(),
   date: z.string(), // Diubah agar lebih fleksibel menerima format YYYY-MM-DD atau ISO
+  deliveryOrder: z.string().optional(),
   tripCount: z.number().min(0),
   totalRevenue: z.number().min(0),
   fuelExpense: z.number().min(0),
@@ -15,6 +16,7 @@ const createRevenueDataSchema = z.object({
 })
 
 const updateRevenueDataSchema = z.object({
+  deliveryOrder: z.string().optional(),
   tripCount: z.number().min(0).optional(),
   totalRevenue: z.number().min(0).optional(),
   fuelExpense: z.number().min(0).optional(),
@@ -61,6 +63,7 @@ export const createRevenueData = async (req: AuthRequest, res: Response) => {
     data: {
       vehicleId: body.vehicleId,
       date: dateObj,
+      deliveryOrder: body.deliveryOrder,
       tripCount: body.tripCount,
       totalRevenue: body.totalRevenue,
       fuelExpense: body.fuelExpense,
@@ -103,6 +106,7 @@ export const updateRevenueData = async (req: AuthRequest, res: Response) => {
   const updated = await prisma.revenueData.update({
     where: { id },
     data: {
+      deliveryOrder: body.deliveryOrder,
       tripCount: body.tripCount,
       totalRevenue,
       fuelExpense,
@@ -327,7 +331,7 @@ export const bulkUpdateRevenueData = async (
   const results = []
 
   for (const update of updates) {
-    const { vehicleId, date, tripCount, totalRevenue, fuelExpense, otherExpense = 0, notes } = update
+    const { vehicleId, date, deliveryOrder, tripCount, totalRevenue, fuelExpense, otherExpense = 0, notes } = update
 
     if (!vehicleId || !date || tripCount === undefined || totalRevenue === undefined || fuelExpense === undefined) {
       results.push({
@@ -357,6 +361,7 @@ export const bulkUpdateRevenueData = async (
         result = await prisma.revenueData.update({
           where: { id: existing.id },
           data: {
+            deliveryOrder,
             tripCount,
             totalRevenue,
             fuelExpense,
@@ -371,6 +376,7 @@ export const bulkUpdateRevenueData = async (
           data: {
             vehicleId,
             date: dateObj,
+            deliveryOrder,
             tripCount,
             totalRevenue,
             fuelExpense,

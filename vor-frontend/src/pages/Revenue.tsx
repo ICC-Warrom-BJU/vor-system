@@ -13,6 +13,7 @@ export default function Revenue() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [formData, setFormData] = useState({
     vehicleId: '',
+    deliveryOrder: '',
     revenue: '',
     expense: '',
     tripCount: '',
@@ -107,6 +108,7 @@ export default function Revenue() {
         body: JSON.stringify({
           vehicleId: formData.vehicleId,
           date: startDate,
+          deliveryOrder: formData.deliveryOrder,
           totalRevenue: parseFloat(formData.revenue),
           fuelExpense: formData.expense ? parseFloat(formData.expense) : 0,
           tripCount: formData.tripCount ? parseInt(formData.tripCount || '0') : 0,
@@ -121,6 +123,7 @@ export default function Revenue() {
         setIsModalOpen(false)
         setFormData({
           vehicleId: '',
+          deliveryOrder: '',
           revenue: '',
           expense: '',
           tripCount: '',
@@ -163,6 +166,7 @@ export default function Revenue() {
     try {
       const token = localStorage.getItem('token')
       const body = {
+        deliveryOrder: editItem.deliveryOrder || '',
         totalRevenue: parseFloat(editItem.totalRevenue),
         fuelExpense: parseFloat(editItem.fuelExpense || '0'),
         otherExpense: parseFloat(editItem.otherExpense || '0'),
@@ -191,7 +195,7 @@ export default function Revenue() {
     }
   }
 
-  const revenueTemplateHeaders = ['nopol', 'date', 'totalRevenue', 'fuelExpense', 'otherExpense', 'tripCount', 'notes']
+  const revenueTemplateHeaders = ['nopol', 'date', 'deliveryOrder', 'totalRevenue', 'fuelExpense', 'otherExpense', 'tripCount', 'notes']
 
   const parseCSV = (csvText: string) => {
     const text = csvText.replace(/\uFEFF/g, '').trim()
@@ -255,6 +259,7 @@ export default function Revenue() {
       const updates = rows.map((row) => ({
         vehicleId: vehicleMap.get(row.nopol) || '',
         date: row.date || '',
+        deliveryOrder: row.deliveryOrder || '',
         totalRevenue: parseFloat(row.totalRevenue || '0'),
         fuelExpense: parseFloat(row.fuelExpense || '0'),
         otherExpense: parseFloat(row.otherExpense || '0'),
@@ -445,6 +450,7 @@ export default function Revenue() {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kendaraan</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. DO</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pendapatan</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">BOP</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Biaya Lain</th>
@@ -463,6 +469,9 @@ export default function Revenue() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {item.vehicle?.nopol}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {item.deliveryOrder || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatRp(item.totalRevenue)}
@@ -493,6 +502,7 @@ export default function Revenue() {
                               otherExpense: item.otherExpense.toString(),
                               tripCount: item.tripCount?.toString() || '',
                               notes: item.notes || '',
+                              deliveryOrder: item.deliveryOrder || '',
                               vehicleNopol: item.vehicle?.nopol,
                               date: item.date,
                             })}
@@ -515,7 +525,7 @@ export default function Revenue() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={isAdmin ? 9 : 8} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={isAdmin ? 10 : 9} className="px-6 py-12 text-center text-gray-500">
                     <p className="text-lg font-medium mb-2">Tidak ada data pendapatan</p>
                     <p className="text-sm">Silakan tambah data pendapatan untuk rentang tanggal ini</p>
                   </td>
@@ -607,6 +617,19 @@ export default function Revenue() {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  No. Delivery Order
+                </label>
+                <input
+                  type="text"
+                  value={formData.deliveryOrder}
+                  onChange={(e) => setFormData({ ...formData, deliveryOrder: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  placeholder="DO-001"
+                />
               </div>
 
               <div>
@@ -727,6 +750,19 @@ export default function Revenue() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                  No. Delivery Order
+                </label>
+                <input
+                  type="text"
+                  value={editItem.deliveryOrder || ''}
+                  onChange={(e) => setEditItem({ ...editItem, deliveryOrder: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  placeholder="DO-001"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Pendapatan (Rp) *
                 </label>
                 <input
@@ -831,7 +867,7 @@ export default function Revenue() {
 
             <div className="p-6 space-y-4">
               <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg text-sm">
-                Format CSV dengan kolom: <strong>nopol, date, totalRevenue, fuelExpense, otherExpense, tripCount, notes</strong>.
+                Format CSV dengan kolom: <strong>nopol, date, deliveryOrder, totalRevenue, fuelExpense, otherExpense, tripCount, notes</strong>.
                 Data yang sudah ada (nopol + tanggal sama) akan diperbarui.
               </div>
 
