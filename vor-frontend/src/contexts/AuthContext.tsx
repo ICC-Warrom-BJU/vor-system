@@ -37,14 +37,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (email: string, password: string, roleFilter?: { allow?: string; deny?: string }) => {
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    })
-    
-    const data = await response.json()
-    
+    let response: Response
+    try {
+      response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+    } catch {
+      throw new Error('Tidak dapat terhubung ke server. Pastikan server backend berjalan.')
+    }
+
+    const raw = await response.text()
+    if (!raw) {
+      throw new Error(
+        `Server tidak memberikan respons (status ${response.status}). Pastikan server backend berjalan.`,
+      )
+    }
+
+    let data
+    try {
+      data = JSON.parse(raw)
+    } catch {
+      throw new Error('Respons server tidak valid. Pastikan alamat API sudah benar.')
+    }
+
     if (data.success) {
       const userRole = data.data.user.role
 
