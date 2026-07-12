@@ -23,11 +23,17 @@ router.post('/bulk/update', roleGuard(['PLANNER', 'ADMIN']), asyncHandler(gpsCon
 
 // Manual sync with EasyGo GPS API
 router.post('/sync', roleGuard(['ADMIN']), asyncHandler(async (req, res) => {
-  const { tahun, bulan } = req.body
+  const { tahun, bulan, lstNoPOL, nopol } = req.body
   const year = tahun || new Date().getFullYear()
   const month = bulan || new Date().getMonth() + 1
 
-  const result = await syncMonthlyGpsData(year, month)
+  // Sync terarah: kirim lstNoPOL (array) atau nopol (string tunggal) untuk 1+ unit.
+  // Kosong = semua unit (perilaku lama; saat ini bulk crash di sisi EasyGo).
+  const noPolList = Array.isArray(lstNoPOL)
+    ? lstNoPOL
+    : (typeof nopol === 'string' && nopol.trim() ? [nopol.trim()] : [])
+
+  const result = await syncMonthlyGpsData(year, month, noPolList)
   res.json({ success: true, data: result })
 }))
 

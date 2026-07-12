@@ -169,7 +169,7 @@ function extractDayData(vehicle: EasyGoVehicleReport): Array<{
   return results
 }
 
-export async function syncMonthlyGpsData(year: number, month: number): Promise<{
+export async function syncMonthlyGpsData(year: number, month: number, noPolList: string[] = []): Promise<{
   total: number
   success: number
   failed: number
@@ -177,7 +177,17 @@ export async function syncMonthlyGpsData(year: number, month: number): Promise<{
 }> {
   const result = { total: 0, success: 0, failed: 0, errors: [] as string[] }
 
-  const response = await fetchMonthlyReport(year, month)
+  const response = await fetchMonthlyReport(year, month, noPolList)
+
+  // EasyGo menandai sukses level-aplikasi dengan ResponseCode === 1.
+  // Kode lain berarti API-nya sendiri gagal (mis. error server-side), walau HTTP 200
+  // dan Data berupa array kosong. Tanpa cek ini, sync akan "berhasil" dengan 0 record
+  // secara senyap. Dilempar agar terlihat jelas di UI (route → 500 + pesan) maupun di log scheduler.
+  if (response.ResponseCode !== 1) {
+    throw new Error(
+      `EasyGo API gagal (ResponseCode ${response.ResponseCode}): ${response.ResponseMessage}`,
+    )
+  }
 
   if (!Array.isArray(response.Data)) {
     result.errors.push(`API response error: ${response.ResponseMessage}`)

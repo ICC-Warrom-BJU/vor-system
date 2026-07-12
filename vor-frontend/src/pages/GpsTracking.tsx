@@ -53,6 +53,9 @@ export default function GpsTracking() {
   const [syncLoading, setSyncLoading] = useState(false)
   const [syncResult, setSyncResult] = useState<{ total: number; success: number; failed: number; errors: string[] } | null>(null)
   const [showSyncModal, setShowSyncModal] = useState(false)
+  const [syncNopol, setSyncNopol] = useState('')
+  const [syncBulan, setSyncBulan] = useState(new Date().getMonth() + 1)
+  const [syncTahun, setSyncTahun] = useState(new Date().getFullYear())
   const queryClient = useQueryClient()
   const user = (() => { try { return JSON.parse(localStorage.getItem('user') || '{}') } catch { return {} } })()
   const isAdmin = user.role === 'ADMIN'
@@ -272,17 +275,27 @@ export default function GpsTracking() {
     event.target.value = ''
   }
 
+  const openSyncModal = () => {
+    setSyncResult(null)
+    setSyncNopol('')
+    setSyncBulan(new Date().getMonth() + 1)
+    setSyncTahun(new Date().getFullYear())
+    setShowSyncModal(true)
+  }
+
   const handleSync = async () => {
     setSyncLoading(true)
     setSyncResult(null)
-    setShowSyncModal(true)
     try {
       const token = localStorage.getItem('token')
-      const now = new Date()
       const response = await fetch('/api/gps/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ tahun: now.getFullYear(), bulan: now.getMonth() + 1 }),
+        body: JSON.stringify({
+          tahun: syncTahun,
+          bulan: syncBulan,
+          lstNoPOL: syncNopol ? [syncNopol] : [],
+        }),
       })
       const data = await response.json()
       if (data.success) {
@@ -305,7 +318,7 @@ export default function GpsTracking() {
         <div className="flex items-center gap-2">
           {isAdmin && (
             <button
-              onClick={handleSync}
+              onClick={openSyncModal}
               disabled={syncLoading}
               className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
             >
@@ -650,6 +663,58 @@ export default function GpsTracking() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => { if (!syncLoading) setShowSyncModal(false) }}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Sync GPS — EasyGo</h2>
+            {!syncLoading && !syncResult && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Unit yang di-sync</label>
+                  <select
+                    value={syncNopol}
+                    onChange={(e) => setSyncNopol(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 outline-none"
+                  >
+                    <option value="">Semua Unit</option>
+                    {(vehicles?.data || []).map((v: any) => (
+                      <option key={v.id} value={v.nopol}>{v.nopol} - {v.vehicleType}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Bulan</label>
+                    <select
+                      value={syncBulan}
+                      onChange={(e) => setSyncBulan(Number(e.target.value))}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 outline-none"
+                    >
+                      {['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'].map((nama, i) => (
+                        <option key={i + 1} value={i + 1}>{nama}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tahun</label>
+                    <input
+                      type="number"
+                      value={syncTahun}
+                      min={2020}
+                      max={new Date().getFullYear() + 1}
+                      onChange={(e) => setSyncTahun(Number(e.target.value))}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 outline-none"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Pilih 1 unit untuk sync terarah, atau "Semua Unit". Data ditarik sesuai bulan & tahun di atas.
+                </p>
+                <button
+                  onClick={handleSync}
+                  className="w-full flex items-center justify-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  <RefreshCw className="w-5 h-5" />
+                  Mulai Sync{syncNopol ? ` — ${syncNopol}` : ''}
+                </button>
+              </div>
+            )}
             {syncLoading && !syncResult ? (
               <div className="flex items-center justify-center py-8">
                 <RefreshCw className="w-8 h-8 animate-spin text-purple-600" />
