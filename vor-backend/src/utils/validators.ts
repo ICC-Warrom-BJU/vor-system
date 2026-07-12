@@ -26,6 +26,7 @@ export const createVehicleSchema = z.object({
   nomorRangka: z.string().nullable().optional(),
   detailUnit: z.string().nullable().optional(),
   nomorLambung: z.string().nullable().optional(),
+  vhcId: z.string().nullable().optional(),
   isActive: z.boolean().default(true),
   targetRevenue: z.number().nullable().optional(),
   cabang: z.string().optional(),

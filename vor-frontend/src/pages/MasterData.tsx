@@ -46,6 +46,7 @@ const vehicleTemplateHeaders = [
   'detailUnit',
   'targetRevenue',
   'nomorLambung',
+  'vhcId',
   'isActive',
   'cabang',
   'customerId',
@@ -503,6 +504,7 @@ export default function MasterData() {
           detailUnit: row.detailUnit || undefined,
           targetRevenue: row.targetRevenue ? Number(row.targetRevenue) : undefined,
           nomorLambung: row.nomorLambung || undefined,
+          vhcId: row.vhcId || undefined,
           isActive: row.isActive ? row.isActive.toLowerCase() === 'true' : true,
           customerId: row.customerId || undefined,
           driverId: row.driverId || undefined,
@@ -906,6 +908,7 @@ export default function MasterData() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Detail Unit</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Target Revenue</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nomor Lambung</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">VHCID</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tonase</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cabang</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pelanggan</th>
@@ -922,6 +925,7 @@ export default function MasterData() {
                       <td className="px-6 py-4 text-sm text-gray-600">{vehicle.detailUnit || '-'}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{vehicle.targetRevenue != null ? Number(vehicle.targetRevenue).toLocaleString('id-ID') : '-'}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{vehicle.nomorLambung || '-'}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600 font-mono">{vehicle.vhcId || '-'}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{vehicle.tonase || '-'}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{vehicle.cabang}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{vehicle.customer?.name || '-'}</td>

@@ -18,6 +18,7 @@ model Vehicle {
   nomorRangka       String?
   detailUnit        String?
   nomorLambung      String?
+  vhcId             String?  // Vehicle ID EasyGo (untuk integrasi live tracking)
   isActive          Boolean  @default(true)
   targetRevenue     Float?   // target revenue per bulan
   cabang            String

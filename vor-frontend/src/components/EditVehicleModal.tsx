@@ -19,6 +19,7 @@ export default function EditVehicleModal({ isOpen, onClose, onSuccess, vehicle }
     detailUnit: '',
     targetRevenue: '',
     nomorLambung: '',
+    vhcId: '',
     branchId: '',
     driverId: '',
     customerId: '',
@@ -85,6 +86,7 @@ export default function EditVehicleModal({ isOpen, onClose, onSuccess, vehicle }
         detailUnit: vehicle.detailUnit || '',
         targetRevenue: vehicle.targetRevenue?.toString() || '',
         nomorLambung: vehicle.nomorLambung || '',
+        vhcId: vehicle.vhcId || '',
         branchId: vehicle.branchId || '',
         driverId: vehicle.driverId || '',
         customerId: vehicle.customerId || '',
@@ -140,6 +142,7 @@ export default function EditVehicleModal({ isOpen, onClose, onSuccess, vehicle }
           detailUnit: formData.detailUnit || null,
           targetRevenue: formData.targetRevenue ? parseFloat(formData.targetRevenue) : null,
           nomorLambung: formData.nomorLambung || null,
+          vhcId: formData.vhcId || null,
           customerId: formData.customerId || undefined,
           driverId: formData.driverId || undefined,
         }),
@@ -281,6 +284,19 @@ export default function EditVehicleModal({ isOpen, onClose, onSuccess, vehicle }
               onChange={(e) => setFormData({ ...formData, detailUnit: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               placeholder="Contoh: Hino 500 box pendingin"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              VHCID
+            </label>
+            <input
+              type="text"
+              value={formData.vhcId}
+              onChange={(e) => setFormData({ ...formData, vhcId: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              placeholder="Vehicle ID EasyGo (untuk live tracking)"
             />
           </div>
 
