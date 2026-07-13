@@ -4,7 +4,10 @@ WORKDIR /app
 
 COPY vor-backend/package.json ./
 
-RUN npm install
+# --include=dev wajib: runtime butuh tsx (start) & prisma CLI (migrate deploy),
+# keduanya di devDependencies. Tanpa ini, NODE_ENV=production akan melewatinya
+# dan CMD (migrate deploy && npm start) gagal.
+RUN npm install --include=dev
 
 COPY vor-backend/ .
 

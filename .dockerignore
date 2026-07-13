@@ -3,5 +3,8 @@ dist
 .git
 *.log
 .env
+**/.env
+**/.env.*
+!**/.env.example
 vor-frontend
 .vscode
