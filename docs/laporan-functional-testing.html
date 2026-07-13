@@ -1,0 +1,531 @@
+<title>Laporan Functional Testing — Backend VOR</title>
+<style>
+  :root {
+    --bg: #f6f7f6;
+    --surface: #ffffff;
+    --surface-2: #f0f2f1;
+    --border: #e0e4e2;
+    --border-strong: #c9d0cd;
+    --ink-1: #14201b;
+    --ink-2: #47544e;
+    --ink-3: #6d7a74;
+    --accent: #0f766e;
+    --accent-soft: #d6ebe8;
+    --pass: #15803d;
+    --pass-soft: #dcf3e4;
+    --warn: #b45309;
+    --warn-soft: #faeacc;
+    --low: #5b6670;
+    --low-soft: #e6e9ec;
+    --info: #1d4ed8;
+    --info-soft: #dde7fb;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1512;
+      --surface: #161e1a;
+      --surface-2: #1c2621;
+      --border: #2a352f;
+      --border-strong: #3a4740;
+      --ink-1: #e8efeb;
+      --ink-2: #a9b5af;
+      --ink-3: #7c8983;
+      --accent: #4fd1c5;
+      --accent-soft: #16302c;
+      --pass: #4ade80;
+      --pass-soft: #16301f;
+      --warn: #fbbf24;
+      --warn-soft: #33260c;
+      --low: #9aa5ad;
+      --low-soft: #232a2f;
+      --info: #7aa2f7;
+      --info-soft: #16223f;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f6f7f6; --surface: #ffffff; --surface-2: #f0f2f1; --border: #e0e4e2; --border-strong: #c9d0cd;
+    --ink-1: #14201b; --ink-2: #47544e; --ink-3: #6d7a74; --accent: #0f766e; --accent-soft: #d6ebe8;
+    --pass: #15803d; --pass-soft: #dcf3e4; --warn: #b45309; --warn-soft: #faeacc;
+    --low: #5b6670; --low-soft: #e6e9ec; --info: #1d4ed8; --info-soft: #dde7fb;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1512; --surface: #161e1a; --surface-2: #1c2621; --border: #2a352f; --border-strong: #3a4740;
+    --ink-1: #e8efeb; --ink-2: #a9b5af; --ink-3: #7c8983; --accent: #4fd1c5; --accent-soft: #16302c;
+    --pass: #4ade80; --pass-soft: #16301f; --warn: #fbbf24; --warn-soft: #33260c;
+    --low: #9aa5ad; --low-soft: #232a2f; --info: #7aa2f7; --info-soft: #16223f;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink-1);
+    font-family: var(--sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px 96px; }
+
+  /* Header */
+  header.doc {
+    background: linear-gradient(160deg, var(--surface) 0%, var(--surface-2) 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 24px 32px;
+  }
+  .header-inner { max-width: 960px; margin: 0 auto; }
+  .eyebrow {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 12px;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .eyebrow::before {
+    content: ""; width: 22px; height: 2px; background: var(--accent); border-radius: 2px;
+  }
+  h1.title {
+    font-size: clamp(26px, 4.5vw, 38px); line-height: 1.15; margin: 0 0 8px;
+    font-weight: 700; letter-spacing: -0.02em; text-wrap: balance;
+  }
+  .subtitle { color: var(--ink-2); font-size: 16px; margin: 0 0 24px; max-width: 60ch; }
+  .meta-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px; background: var(--border); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+  }
+  .meta-cell { background: var(--surface); padding: 12px 16px; }
+  .meta-cell .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); font-weight: 600; }
+  .meta-cell .v { font-size: 14px; color: var(--ink-1); font-weight: 600; margin-top: 3px; }
+
+  /* Sections */
+  section { margin-top: 48px; scroll-margin-top: 24px; }
+  h2 {
+    font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 4px;
+    display: flex; align-items: baseline; gap: 12px;
+  }
+  h2 .num {
+    font-family: var(--mono); font-size: 13px; color: var(--accent);
+    background: var(--accent-soft); padding: 2px 8px; border-radius: 6px; font-weight: 700;
+  }
+  h3 {
+    font-size: 15px; font-weight: 700; margin: 28px 0 10px; color: var(--ink-1);
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  h3 .mod-num { font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+  .section-lead { color: var(--ink-2); margin: 6px 0 18px; max-width: 68ch; }
+
+  /* Metric cards */
+  .metrics {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-top: 20px;
+  }
+  .metric {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 18px 18px 16px; position: relative; overflow: hidden;
+  }
+  .metric::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent);
+  }
+  .metric.good::before { background: var(--pass); }
+  .metric .big { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .metric.good .big { color: var(--pass); }
+  .metric .lbl { font-size: 12.5px; color: var(--ink-2); margin-top: 2px; }
+
+  /* Tables */
+  .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; margin-top: 12px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; min-width: 520px; }
+  thead th {
+    background: var(--surface-2); text-align: left; padding: 11px 14px; font-weight: 600;
+    color: var(--ink-2); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border-strong); white-space: nowrap;
+  }
+  tbody td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--ink-1); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr { background: var(--surface); }
+  tbody tr:nth-child(even) { background: var(--surface-2); }
+  td.id, .idcell { font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); white-space: nowrap; }
+  .num-col { font-variant-numeric: tabular-nums; }
+
+  /* Pills */
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600;
+    padding: 2px 9px; border-radius: 999px; white-space: nowrap; line-height: 1.5;
+  }
+  .pill.pass { color: var(--pass); background: var(--pass-soft); }
+  .pill.pass::before { content: "✓"; font-weight: 700; }
+  .pill.warn { color: var(--warn); background: var(--warn-soft); }
+  .pill.low { color: var(--low); background: var(--low-soft); }
+  .pill.info { color: var(--info); background: var(--info-soft); }
+  .pill.fixed { color: var(--pass); background: var(--pass-soft); }
+  .pill.fixed::before { content: "✓"; font-weight: 700; }
+
+  /* Callout */
+  .callout {
+    border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    background: var(--surface); border-radius: 10px; padding: 14px 18px; margin-top: 16px;
+    color: var(--ink-2); font-size: 14px;
+  }
+  .callout strong { color: var(--ink-1); }
+
+  /* Reco list */
+  .reco { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 10px; }
+  .reco li {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 13px 16px; display: flex; gap: 12px; align-items: flex-start; font-size: 14px; color: var(--ink-1);
+  }
+  .reco li .tick { color: var(--pass); font-weight: 700; flex-shrink: 0; }
+
+  footer.doc {
+    margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border);
+    color: var(--ink-3); font-size: 13px; text-align: center;
+  }
+  .divider { height: 1px; background: var(--border); border: none; margin: 40px 0 0; }
+</style>
+
+<header class="doc">
+  <div class="header-inner">
+    <p class="eyebrow">Laporan QA Internal</p>
+    <h1 class="title">Functional Testing — Backend VOR</h1>
+    <p class="subtitle">Pengujian fungsional API backend sistem manajemen armada BJU (VOR — Vehicle Operational Report), positif &amp; negatif, sebelum serah-terima ke tim QA perusahaan.</p>
+    <div class="meta-grid">
+      <div class="meta-cell"><div class="k">Lingkup</div><div class="v">16 Modul</div></div>
+      <div class="meta-cell"><div class="k">Kasus Uji</div><div class="v">±74 skenario</div></div>
+      <div class="meta-cell"><div class="k">Tanggal</div><div class="v">12–13 Jul 2026</div></div>
+      <div class="meta-cell"><div class="k">Branch</div><div class="v">dev</div></div>
+      <div class="meta-cell"><div class="k">Stack</div><div class="v">Express · Prisma 7 · PostgreSQL</div></div>
+      <div class="meta-cell"><div class="k">Auth</div><div class="v">JWT + RBAC</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section id="ringkasan">
+    <h2><span class="num">01</span> Ringkasan Eksekutif</h2>
+    <p class="section-lead">Telah dilakukan pengujian fungsional terhadap 16 modul (14 modul backend + 2 modul lintas-modul UI/ketahanan) mencakup ±74 kasus uji (skenario positif dan negatif). Seluruh kasus uji <strong>LULUS</strong>. Ditemukan 4 defect + 1 perbaikan UX yang kesemuanya telah diperbaiki, diverifikasi ulang, dan di-commit ke branch <code>dev</code>.</p>
+    <div class="metrics">
+      <div class="metric good"><div class="big">16</div><div class="lbl">Modul diuji (dari 16)</div></div>
+      <div class="metric good"><div class="big">100%</div><div class="lbl">±74 kasus uji LULUS</div></div>
+      <div class="metric good"><div class="big">4</div><div class="lbl">Temuan — semua diperbaiki</div></div>
+      <div class="metric"><div class="big">2</div><div class="lbl">Observasi minor (Phase 2)</div></div>
+    </div>
+    <div class="callout"><strong>Catatan metode:</strong> Point 15–16 (Lintas-Modul UI &amp; ketahanan: modal, validasi, pagination, proteksi rute, sesi) diverifikasi via telaah kode komponen frontend. Item yang murni visual/responsif (tampilan di layar HP, animasi terputar) disarankan dikonfirmasi ulang lewat UI manual testing singkat di browser.</div>
+  </section>
+
+  <section id="lingkungan">
+    <h2><span class="num">02</span> Lingkungan Pengujian</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Komponen</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr><td>Backend</td><td>Node.js + Express + TypeScript (tsx watch)</td></tr>
+          <tr><td>ORM / Database</td><td>Prisma 7 (driver adapter <code>@prisma/adapter-pg</code>) + PostgreSQL</td></tr>
+          <tr><td>Autentikasi</td><td>JWT (Bearer token), masa aktif 7 hari</td></tr>
+          <tr><td>Otorisasi</td><td>RBAC via middleware <code>roleGuard([...])</code> + validasi peran di controller</td></tr>
+          <tr><td>Peran diuji</td><td>ADMIN, MANAGER / PLANNER (peran terbatas)</td></tr>
+          <tr><td>Alat uji</td><td>HTTP client (curl), verifikasi langsung ke database</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout"><strong>Prinsip pengujian:</strong> setiap data uji diberi penanda jelas (mis. <code>TEST QA</code>, tanggal masa depan) dan dibersihkan kembali setelah pengujian agar data produksi tetap bersih.</div>
+  </section>
+
+  <section id="rekap">
+    <h2><span class="num">03</span> Rekapitulasi Hasil per Modul</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>#</th><th>Modul</th><th class="num-col">Kasus</th><th>Hasil</th></tr></thead>
+        <tbody>
+          <tr><td class="num-col">1</td><td>Autentikasi &amp; Sesi</td><td class="num-col">6</td><td><span class="pill pass">6/6 PASS</span></td></tr>
+          <tr><td class="num-col">2</td><td>RBAC (Kontrol Akses)</td><td class="num-col">4</td><td><span class="pill pass">4/4 PASS</span></td></tr>
+          <tr><td class="num-col">3</td><td>Dashboard</td><td class="num-col">2</td><td><span class="pill pass">2/2 PASS</span></td></tr>
+          <tr><td class="num-col">4</td><td>Master Data — Armada</td><td class="num-col">6</td><td><span class="pill pass">6/6 PASS</span></td></tr>
+          <tr><td class="num-col">5</td><td>Master Data — Driver / Customer / Status / User</td><td class="num-col">4</td><td><span class="pill pass">4/4 PASS</span></td></tr>
+          <tr><td class="num-col">6</td><td>Status Aktual</td><td class="num-col">4</td><td><span class="pill pass">4/4 PASS</span></td></tr>
+          <tr><td class="num-col">7</td><td>Forecast &amp; Actual vs Forecast</td><td class="num-col">2</td><td><span class="pill pass">2/2 PASS</span></td></tr>
+          <tr><td class="num-col">8</td><td>Pendapatan (multi-DO)</td><td class="num-col">5</td><td><span class="pill pass">5/5 PASS</span></td></tr>
+          <tr><td class="num-col">9</td><td>Analisa Jarak Tempuh (GPS)</td><td class="num-col">5</td><td><span class="pill pass">5/5 PASS</span></td></tr>
+          <tr><td class="num-col">10</td><td>Live Tracking (EasyGo)</td><td class="num-col">3</td><td><span class="pill pass">3/3 PASS</span></td></tr>
+          <tr><td class="num-col">11</td><td>Laporan &amp; Export</td><td class="num-col">2</td><td><span class="pill pass">2/2 PASS</span></td></tr>
+          <tr><td class="num-col">12</td><td>Akun Saya (profil / password / avatar)</td><td class="num-col">4</td><td><span class="pill pass">4/4 PASS</span></td></tr>
+          <tr><td class="num-col">13</td><td>Notifikasi</td><td class="num-col">3</td><td><span class="pill pass">3/3 PASS</span></td></tr>
+          <tr><td class="num-col">14</td><td>Audit Log</td><td class="num-col">4</td><td><span class="pill pass">4/4 PASS</span></td></tr>
+          <tr><td class="num-col">15</td><td>Lintas-Modul UI (modal / validasi / pagination)</td><td class="num-col">8</td><td><span class="pill pass">8/8 PASS</span></td></tr>
+          <tr><td class="num-col">16</td><td>Ketahanan &amp; Sesi</td><td class="num-col">6</td><td><span class="pill pass">6/6 PASS</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="detail">
+    <h2><span class="num">04</span> Detail Hasil Uji per Modul</h2>
+
+    <h3><span class="mod-num">Point 1</span> Autentikasi &amp; Sesi <span class="pill pass">6/6</span></h3>
+    <div class="table-scroll"><table>
+      <thead><tr><th>ID</th><th>Skenario</th><th>Ekspektasi</th><th>Hasil</th></tr></thead>
+      <tbody>
+        <tr><td class="idcell">AU-01</td><td>Login kredensial benar</td><td>200 + token JWT + data user</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">AU-02</td><td>Login password salah</td><td>401 "Email atau password salah"</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">AU-03</td><td>Login email tidak terdaftar</td><td>401 (pesan generik, tidak membedakan)</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">AU-04</td><td>Login body kosong / tidak valid</td><td>401 generik (tak bocorkan detail validasi)</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">AU-05</td><td>Akses endpoint tanpa token</td><td>401 Unauthorized</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">AU-06</td><td>Akses dengan token tidak valid / kadaluarsa</td><td>401 Unauthorized</td><td><span class="pill pass">PASS</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3><span class="mod-num">Point 2</span> RBAC — Kontrol Akses <span class="pill pass">4/4</span></h3>
+    <div class="table-scroll"><table>
+      <thead><tr><th>ID</th><th>Skenario</th><th>Ekspektasi</th><th>Hasil</th></tr></thead>
+      <tbody>
+        <tr><td class="idcell">RB-01</td><td>Peran non-ADMIN akses endpoint ADMIN-only</td><td>403 Forbidden</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">RB-02</td><td>ADMIN akses penuh</td><td>200</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">RB-03</td><td>RBAC ditegakkan di sisi server (bukan hanya UI)</td><td>403 walau request langsung ke API</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">RB-04</td><td>Filter data per cabang / tipe kendaraan sesuai peran</td><td>Data terbatas sesuai hak</td><td><span class="pill pass">PASS</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3><span class="mod-num">Point 3</span> Dashboard <span class="pill pass">2/2</span></h3>
+    <div class="table-scroll"><table>
+      <thead><tr><th>ID</th><th>Skenario</th><th>Ekspektasi</th><th>Hasil</th></tr></thead>
+      <tbody>
+        <tr><td class="idcell">DB-01</td><td>Ambil ringkasan / statistik dashboard</td><td>200 + agregasi benar</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">DB-02</td><td>Konsistensi jumlah unit vs master data</td><td>Jumlah cocok (17 unit)</td><td><span class="pill pass">PASS</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3><span class="mod-num">Point 4</span> Master Data — Armada <span class="pill pass">6/6</span></h3>
+    <div class="table-scroll"><table>
+      <thead><tr><th>ID</th><th>Skenario</th><th>Ekspektasi</th><th>Hasil</th></tr></thead>
+      <tbody>
+        <tr><td class="idcell">MA-01</td><td>Tambah armada valid</td><td>201</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">MA-02</td><td>Tambah armada data tidak lengkap</td><td>400 Validasi gagal</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">MA-03</td><td>Tambah nopol duplikat</td><td>409 Conflict</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">MA-04</td><td>Edit armada (termasuk field VHCID EasyGo)</td><td>200</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">MA-05</td><td>Hapus armada</td><td>200</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">MA-06</td><td>Ambil daftar / detail armada</td><td>200</td><td><span class="pill pass">PASS</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3><span class="mod-num">Point 5</span> Master Data — Driver / Customer / Status / User <span class="pill pass">4/4</span></h3>
+    <div class="table-scroll"><table>
+      <thead><tr><th>ID</th><th>Skenario</th><th>Ekspektasi</th><th>Hasil</th></tr></thead>
+      <tbody>
+        <tr><td class="idcell">MD-01</td><td>CRUD Driver</td><td>200 / 201</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">MD-02</td><td>CRUD Customer</td><td>200 / 201</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">MD-03</td><td>Master Status — hanya ADMIN boleh ubah</td><td>403 untuk non-ADMIN</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">MD-04</td><td>Master User — pembuatan &amp; peran</td><td>201 + peran benar</td><td><span class="pill pass">PASS</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3><span class="mod-num">Point 6</span> Status Aktual <span class="pill pass">4/4</span></h3>
+    <div class="table-scroll"><table>
+      <thead><tr><th>ID</th><th>Skenario</th><th>Ekspektasi</th><th>Hasil</th></tr></thead>
+      <tbody>
+        <tr><td class="idcell">SA-01</td><td>Input status aktual valid</td><td>201</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">SA-02</td><td>Status code tidak dikenal</td><td>404 Status code tidak ditemukan</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">SA-03</td><td>Duplikat unit + tanggal</td><td>409 Conflict</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">SA-04</td><td>Ambil data status per tanggal</td><td>200</td><td><span class="pill pass">PASS</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3><span class="mod-num">Point 7</span> Forecast &amp; Actual vs Forecast <span class="pill pass">2/2</span></h3>
+    <div class="table-scroll"><table>
+      <thead><tr><th>ID</th><th>Skenario</th><th>Ekspektasi</th><th>Hasil</th></tr></thead>
+      <tbody>
+        <tr><td class="idcell">FC-01</td><td>Input &amp; ambil forecast status</td><td>201 / 200</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">FC-02</td><td>Perbandingan Actual vs Forecast</td><td>200 + data selaras</td><td><span class="pill pass">PASS</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3><span class="mod-num">Point 8</span> Pendapatan — Multi-DO <span class="pill pass">5/5</span></h3>
+    <div class="table-scroll"><table>
+      <thead><tr><th>ID</th><th>Skenario</th><th>Ekspektasi</th><th>Hasil</th></tr></thead>
+      <tbody>
+        <tr><td class="idcell">RV-01</td><td>Input pendapatan dengan No. DO</td><td>201</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">RV-02</td><td>No. DO wajib diisi</td><td>400 jika kosong</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">RV-03</td><td>Trip = jumlah DO per unit + tanggal (1 baris = 1 DO)</td><td>Jumlah trip sesuai jumlah DO</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">RV-04</td><td>DO duplikat (unit + tanggal + DO sama)</td><td>409 Conflict</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">RV-05</td><td>Bulk upsert per (unit, tanggal, DO)</td><td>Sukses sesuai kunci</td><td><span class="pill pass">PASS</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3><span class="mod-num">Point 9</span> Analisa Jarak Tempuh — GPS <span class="pill pass">5/5</span></h3>
+    <div class="table-scroll"><table>
+      <thead><tr><th>ID</th><th>Skenario</th><th>Ekspektasi</th><th>Hasil</th></tr></thead>
+      <tbody>
+        <tr><td class="idcell">GP-01</td><td>Input data GPS valid</td><td>201</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">GP-02</td><td>Validasi tipe data (angka) gagal</td><td>400 Validasi gagal</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">GP-03</td><td>Vehicle tidak ditemukan</td><td>404</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">GP-04</td><td>Ambil data per rentang tanggal + total</td><td>200 + agregasi benar</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">GP-05</td><td>Riwayat sinkronisasi EasyGo (ADMIN-only)</td><td>200 (ADMIN) / 403 (non-ADMIN)</td><td><span class="pill pass">PASS</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3><span class="mod-num">Point 10</span> Live Tracking — EasyGo <span class="pill pass">3/3</span></h3>
+    <div class="table-scroll"><table>
+      <thead><tr><th>ID</th><th>Skenario</th><th>Ekspektasi</th><th>Hasil</th></tr></thead>
+      <tbody>
+        <tr><td class="idcell">LT-01</td><td>Ambil posisi terakhir unit ber-VHCID</td><td>200 + lat / lon / lastUpdate</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">LT-02</td><td>Unit tanpa VHCID</td><td>422 (minta isi VHCID dulu)</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">LT-03</td><td>Unit tidak ditemukan</td><td>404</td><td><span class="pill pass">PASS</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3><span class="mod-num">Point 11</span> Laporan &amp; Export <span class="pill pass">2/2</span></h3>
+    <div class="table-scroll"><table>
+      <thead><tr><th>ID</th><th>Skenario</th><th>Ekspektasi</th><th>Hasil</th></tr></thead>
+      <tbody>
+        <tr><td class="idcell">RP-01</td><td>Ambil data laporan</td><td>200</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">RP-02</td><td>Export CSV</td><td>File CSV valid</td><td><span class="pill pass">PASS</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3><span class="mod-num">Point 12</span> Akun Saya <span class="pill pass">4/4</span></h3>
+    <div class="table-scroll"><table>
+      <thead><tr><th>ID</th><th>Skenario</th><th>Ekspektasi</th><th>Hasil</th></tr></thead>
+      <tbody>
+        <tr><td class="idcell">AC-01</td><td>Ubah profil</td><td>200</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">AC-02</td><td>Ubah password (password lama benar)</td><td>200</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">AC-03</td><td>Ubah password (password lama salah)</td><td>400 / 401 ditolak</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">AC-04</td><td>Ubah avatar (avatarSeed)</td><td>200</td><td><span class="pill pass">PASS</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3><span class="mod-num">Point 13</span> Notifikasi <span class="pill pass">3/3</span></h3>
+    <div class="table-scroll"><table>
+      <thead><tr><th>ID</th><th>Skenario</th><th>Ekspektasi</th><th>Hasil</th></tr></thead>
+      <tbody>
+        <tr><td class="idcell">NT-01</td><td>Hitung notifikasi terkomputasi</td><td>Jumlah benar (breakdown / idle, SIM ≤30hr, gagal sync 7hr)</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">NT-02</td><td>Setiap notifikasi punya tipe / severity / link</td><td>Struktur lengkap</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">NT-03</td><td>Kondisi kosong (empty state)</td><td>Ditangani di kode</td><td><span class="pill pass">PASS</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3><span class="mod-num">Point 14</span> Audit Log <span class="pill pass">4/4</span></h3>
+    <div class="table-scroll"><table>
+      <thead><tr><th>ID</th><th>Skenario</th><th>Ekspektasi</th><th>Hasil</th></tr></thead>
+      <tbody>
+        <tr><td class="idcell">AUD-01</td><td>Setiap mutasi tercatat otomatis</td><td>Entry berisi action, entity, entityId, aktor, waktu</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">AUD-02</td><td>Filter (entity / action) &amp; pagination</td><td>Hasil terfilter benar, halaman berbeda</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">AUD-03</td><td>Hanya ADMIN yang boleh melihat</td><td>403 untuk non-ADMIN</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">AUD-04</td><td>Kredensial tidak ikut tercatat</td><td>Login tak diaudit; tak ada field <code>password</code> di log</td><td><span class="pill pass">PASS</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3><span class="mod-num">Point 15</span> Lintas-Modul UI <span class="pill pass">8/8</span></h3>
+    <p class="section-lead" style="margin-top:0;">Diverifikasi via telaah kode komponen frontend (8 modal Master Data + halaman Audit Log).</p>
+    <div class="table-scroll"><table>
+      <thead><tr><th>ID</th><th>Skenario</th><th>Bukti / Ekspektasi</th><th>Hasil</th></tr></thead>
+      <tbody>
+        <tr><td class="idcell">XM-01</td><td>Modal tidak melebihi ukuran layar</td><td><code>max-w-xl/md</code> + <code>max-h-[85vh] overflow-y-auto</code> + backdrop <code>p-4</code> → isi scroll internal</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">XM-02</td><td>Animasi buka modal + hormati reduce-motion</td><td><code>animate-modal-fade</code> + <code>animate-modal-pop</code> + <code>motion-reduce:animate-none</code></td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">XM-03</td><td>Tutup modal (X, Batal, ESC, klik backdrop)</td><td>Tombol X &amp; Batal + ESC + klik area gelap (setelah perbaikan O-03)</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">XM-04</td><td>Validasi form sisi-klien</td><td>Field wajib (nopol / tipe / cabang), angka harus positif</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">XM-05</td><td>Error server ditampilkan di modal</td><td>Mapping <code>data.error[].message</code> → banner merah</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">XM-06</td><td>Pagination</td><td>Prev/Next <code>disabled</code> di batas, <code>totalPages</code> benar, reset ke page 1 saat filter</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">XM-07</td><td>Loading &amp; empty state</td><td>State "Memuat…" dan "Belum ada data" ditangani</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">XM-08</td><td>Tabel lebar bisa di-scroll horizontal</td><td>Wrapper <code>overflow-x-auto</code> di semua tabel</td><td><span class="pill pass">PASS</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3><span class="mod-num">Point 16</span> Ketahanan &amp; Sesi <span class="pill pass">6/6</span></h3>
+    <div class="table-scroll"><table>
+      <thead><tr><th>ID</th><th>Skenario</th><th>Bukti / Ekspektasi</th><th>Hasil</th></tr></thead>
+      <tbody>
+        <tr><td class="idcell">RS-01</td><td>Rute terproteksi → redirect ke <code>/login</code> bila belum login</td><td><code>RequireAuth</code> + <code>Navigate</code></td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">RS-02</td><td>Sesi persist &amp; dipulihkan saat reload tanpa flash</td><td><code>localStorage</code> + gating <code>isAuthLoaded</code></td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">RS-03</td><td>Logout menghapus token+user &amp; kembali ke login</td><td><code>logout()</code> clear localStorage</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">RS-04</td><td>Login tahan respons kosong / invalid</td><td>Parsing resilient (perbaikan F-01)</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">RS-05</td><td>Token kadaluarsa / invalid → auto logout / redirect</td><td>Interceptor 401 terpusat (setelah perbaikan F-04)</td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td class="idcell">RS-06</td><td>Akses langsung URL tanpa hak (mis. <code>/audit-log</code> non-ADMIN)</td><td>Halaman tampil pesan "Hanya ADMIN" + server 403</td><td><span class="pill pass">PASS</span></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="temuan">
+    <h2><span class="num">05</span> Temuan &amp; Perbaikan</h2>
+    <p class="section-lead">Seluruh temuan berkategori kualitas respons / keamanan, ditemukan saat pengujian negatif, dan telah diperbaiki serta diverifikasi ulang (di-commit ke <code>dev</code>).</p>
+    <div class="table-scroll"><table>
+      <thead><tr><th>ID</th><th>Judul</th><th>Severity</th><th>Deskripsi</th><th>Perbaikan</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="idcell">F-01</td>
+          <td>Kebocoran detail validasi di halaman login</td>
+          <td><span class="pill warn">Medium</span></td>
+          <td>Login dengan body tidak valid mengembalikan detail error validasi (Zod), berpotensi membocorkan struktur / aturan input.</td>
+          <td>Semua input login tidak valid disamakan menjadi <strong>401 "Email atau password salah"</strong> (generik).</td>
+          <td><span class="pill fixed">Fixed</span></td>
+        </tr>
+        <tr>
+          <td class="idcell">F-02</td>
+          <td>Error validasi menghasilkan 500 (bukan 400)</td>
+          <td><span class="pill warn">Medium</span></td>
+          <td>Modul Status Aktual, Forecast, dan GPS memakai <code>.parse()</code> yang melempar exception → respons <strong>500 Internal Server Error</strong> untuk input salah.</td>
+          <td>Diubah ke pola <code>safeParse</code> → mengembalikan <strong>400 "Validasi gagal"</strong> yang rapi.</td>
+          <td><span class="pill fixed">Fixed</span></td>
+        </tr>
+        <tr>
+          <td class="idcell">F-03</td>
+          <td>Menu khusus ADMIN terlihat oleh peran lain</td>
+          <td><span class="pill low">Low</span></td>
+          <td>Menu manajemen (Pengaturan, Audit Log) tampil di sidebar untuk non-ADMIN (server tetap menolak 403, namun UI membingungkan).</td>
+          <td>Menu disaring per peran (<code>adminOnlyPaths</code>); server tetap menegakkan 403 sebagai lapis kedua.</td>
+          <td><span class="pill fixed">Fixed</span></td>
+        </tr>
+        <tr>
+          <td class="idcell">F-04</td>
+          <td>Tidak ada penanganan sesi kadaluarsa terpusat</td>
+          <td><span class="pill warn">Medium</span></td>
+          <td><code>isAuthenticated</code> hanya mengecek keberadaan token, bukan validitasnya. Saat token JWT kadaluarsa / dicabut, tiap request mendapat 401 namun aplikasi tidak otomatis logout — UI seolah masih login, data gagal senyap.</td>
+          <td>Interceptor 401 terpusat di <code>AuthContext</code> (membungkus <code>window.fetch</code>): respons 401 dari API memaksa logout → <code>RequireAuth</code> redirect ke <code>/login</code> disertai info "Sesi Anda telah berakhir".</td>
+          <td><span class="pill fixed">Fixed</span></td>
+        </tr>
+      </tbody>
+    </table></div>
+    <div class="callout"><strong>Catatan:</strong> F-03 murni tampilan — <strong>tidak</strong> ada celah otorisasi karena backend selalu memvalidasi peran (terverifikasi di RB-03 &amp; AUD-03).</div>
+
+    <h3 style="margin-top:32px;">Perbaikan UX <span style="font-weight:500;font-size:13px;color:var(--ink-3);">(bukan defect)</span></h3>
+    <div class="table-scroll"><table>
+      <thead><tr><th>ID</th><th>Judul</th><th>Deskripsi</th><th>Perbaikan</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="idcell">O-03</td>
+          <td>Modal belum bisa ditutup dengan ESC / klik backdrop</td>
+          <td>Modal hanya bisa ditutup via tombol X / Batal; pengguna umumnya mengharapkan tombol ESC dan klik area gelap juga menutup.</td>
+          <td>Hook reusable <code>useEscToClose</code> (tombol ESC) + <code>onClick</code> backdrop, diterapkan pada 8 modal Master Data.</td>
+          <td><span class="pill fixed">Fixed</span></td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="observasi">
+    <h2><span class="num">06</span> Observasi Minor <span style="font-weight:500;font-size:14px;color:var(--ink-3);">(Non-Blocking)</span></h2>
+    <p class="section-lead">Tidak menghalangi rilis; direkomendasikan untuk Phase 2.</p>
+    <div class="table-scroll"><table>
+      <thead><tr><th>ID</th><th>Observasi</th><th>Rekomendasi</th></tr></thead>
+      <tbody>
+        <tr><td class="idcell">O-01</td><td>Ketidakseragaman parameter tanggal antar-endpoint (<code>date</code> vs <code>startDate</code> / <code>endDate</code>).</td><td>Seragamkan konvensi parameter untuk konsistensi API.</td></tr>
+        <tr><td class="idcell">O-02</td><td>Export hanya tersedia format CSV (belum ada PDF).</td><td>Tambahkan export PDF bila dibutuhkan pelaporan formal.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="kesimpulan">
+    <h2><span class="num">07</span> Kesimpulan &amp; Rekomendasi</h2>
+    <ul class="reco">
+      <li><span class="tick">✓</span><div><strong>Sistem fungsional sangat sehat</strong> — 16 modul, ±74 kasus uji, seluruhnya LULUS.</div></li>
+      <li><span class="tick">✓</span><div><strong>RBAC ditegakkan di sisi server</strong> pada semua endpoint yang diuji (tidak bisa di-bypass lewat request langsung).</div></li>
+      <li><span class="tick">✓</span><div><strong>Audit Log aman</strong> — mencatat aktor &amp; mutasi tanpa membocorkan kredensial.</div></li>
+      <li><span class="tick">✓</span><div><strong>Ketahanan sesi kuat</strong> — rute terproteksi &amp; sesi kadaluarsa kini otomatis logout (F-04).</div></li>
+      <li><span class="tick">✓</span><div><strong>4 temuan + 1 perbaikan UX sudah diperbaiki</strong> dan diverifikasi; 2 observasi minor dijadwalkan Phase 2.</div></li>
+    </ul>
+    <div class="callout" style="border-left-color:var(--info);">
+      <strong>Tahap berikutnya:</strong> lanjut ke <strong>Security Testing</strong> (enforce <code>JWT_SECRET</code>, rate-limit login, header keamanan, uji injection). Item visual/responsif Point 15 (tampilan modal &amp; tabel di layar HP) cukup dikonfirmasi ulang lewat UI manual testing singkat.
+    </div>
+  </section>
+
+  <hr class="divider" />
+  <footer class="doc">
+    Dokumen ini dihasilkan sebagai bagian dari proses QA internal sebelum serah-terima ke tim QA perusahaan · VOR Fleet Management BJU · 13 Juli 2026
+  </footer>
+</div>

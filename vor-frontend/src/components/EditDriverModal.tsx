@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useEscToClose } from '../hooks/useModalDismiss'
 import { X } from 'lucide-react'
 
 interface EditDriverModalProps {
@@ -59,14 +60,16 @@ export default function EditDriverModal({ isOpen, onClose, onSuccess, driver, br
     finally { setLoading(false) }
   }
 
+  useEscToClose(isOpen, onClose)
+
   if (!isOpen) return null
 
   const inputClass = 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm'
   const labelClass = 'block text-sm font-medium text-gray-700 mb-1'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-modal-fade motion-reduce:animate-none">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[85vh] overflow-y-auto animate-modal-pop motion-reduce:animate-none">
+    <div onClick={onClose} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-modal-fade motion-reduce:animate-none">
+      <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[85vh] overflow-y-auto animate-modal-pop motion-reduce:animate-none">
         <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
           <h2 className="text-xl font-semibold text-gray-800">Edit Driver</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>

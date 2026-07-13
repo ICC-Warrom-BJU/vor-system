@@ -38,6 +38,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsAuthLoaded(true)
   }, [])
 
+  // F-04: penanganan sesi kadaluarsa terpusat.
+  // Semua modul memakai fetch(); di sini kita bungkus window.fetch sekali agar
+  // respons 401 dari API (token kadaluarsa/dicabut) otomatis memaksa logout.
+  // Setelah token dikosongkan, RequireAuth akan redirect ke /login.
+  useEffect(() => {
+    const originalFetch = window.fetch
+    window.fetch = async (...args) => {
+      const response = await originalFetch(...args)
+      try {
+        const input = args[0]
+        const url =
+          typeof input === 'string'
+            ? input
+            : input instanceof Request
+              ? input.url
+              : String(input)
+        const isApi = url.includes('/api/')
+        const isLoginCall = url.includes('/api/auth/login')
+        if (response.status === 401 && isApi && !isLoginCall && localStorage.getItem('token')) {
+          sessionStorage.setItem('sessionExpired', '1')
+          setUser(null)
+          setToken(null)
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
+        }
+      } catch {
+        // Jangan ganggu alur fetch normal bila parsing URL gagal.
+      }
+      return response
+    }
+    return () => {
+      window.fetch = originalFetch
+    }
+  }, [])
+
   const login = async (email: string, password: string, roleFilter?: { allow?: string; deny?: string }) => {
     let response: Response
     try {

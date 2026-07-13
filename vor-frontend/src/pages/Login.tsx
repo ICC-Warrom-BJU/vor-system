@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import vorLogo from '@/assets/logo.png'
@@ -23,8 +23,17 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
   const navigate = useNavigate()
   const { login } = useAuth()
+
+  // F-04: bila diarahkan ke sini karena sesi kadaluarsa, tampilkan info sekali.
+  useEffect(() => {
+    if (sessionStorage.getItem('sessionExpired')) {
+      setNotice('Sesi Anda telah berakhir. Silakan login kembali.')
+      sessionStorage.removeItem('sessionExpired')
+    }
+  }, [])
 
   const current = tabData[tab]
 
@@ -34,6 +43,7 @@ export default function Login() {
 
     try {
       const roleFilter = tab === 'admin' ? { allow: 'Admin' } : { deny: 'Admin' }
+      setNotice('')
       await login(email, password, roleFilter)
       navigate('/dashboard')
     } catch (err) {
@@ -81,6 +91,12 @@ export default function Login() {
               </button>
             ))}
           </div>
+
+          {notice && !error && (
+            <div className="bg-amber-500/20 backdrop-blur-sm border border-amber-400/30 text-amber-200 px-4 py-3 rounded-xl mb-6 text-sm">
+              {notice}
+            </div>
+          )}
 
           {error && (
             <div className="bg-red-500/20 backdrop-blur-sm border border-red-400/30 text-red-300 px-4 py-3 rounded-xl mb-6 text-sm">
