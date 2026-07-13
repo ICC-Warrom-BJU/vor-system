@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Calendar, Pencil, Trash2, Upload, Download, RefreshCw } from 'lucide-react'
+import { Plus, Calendar, Pencil, Trash2, Upload, Download, RefreshCw, History } from 'lucide-react'
 
 function formatTime(seconds: number) {
   if (!seconds && seconds !== 0) return '-'
@@ -56,6 +56,17 @@ export default function GpsTracking() {
   const [syncNopol, setSyncNopol] = useState('')
   const [syncBulan, setSyncBulan] = useState(new Date().getMonth() + 1)
   const [syncTahun, setSyncTahun] = useState(new Date().getFullYear())
+  const [showHistory, setShowHistory] = useState(false)
+
+  const { data: syncHistory } = useQuery({
+    queryKey: ['gpsSyncHistory', showHistory],
+    queryFn: async () => {
+      const token = localStorage.getItem('token')
+      const res = await fetch('/api/gps/sync/history', { headers: { Authorization: `Bearer ${token}` } })
+      return res.json()
+    },
+    enabled: showHistory,
+  })
   const queryClient = useQueryClient()
   const user = (() => { try { return JSON.parse(localStorage.getItem('user') || '{}') } catch { return {} } })()
   const isAdmin = user.role === 'ADMIN'
@@ -314,7 +325,7 @@ export default function GpsTracking() {
   return (
     <div className="space-y-6 animate-fade-up">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">GPS Tracking</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Analisa Jarak Tempuh</h1>
         <div className="flex items-center gap-2">
           {isAdmin && (
             <button
@@ -324,6 +335,15 @@ export default function GpsTracking() {
             >
               <RefreshCw className={`w-5 h-5 ${syncLoading ? 'animate-spin' : ''}`} />
               <span>{syncLoading ? 'Sync...' : 'Sync GPS'}</span>
+            </button>
+          )}
+          {isAdmin && (
+            <button
+              onClick={() => setShowHistory(true)}
+              className="flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              <History className="w-5 h-5" />
+              <span>Riwayat Sync</span>
             </button>
           )}
           <button
@@ -788,6 +808,53 @@ export default function GpsTracking() {
             </div>
             <div className="flex justify-end mt-4">
               <button onClick={() => setIsImportModalOpen(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">Tutup</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Riwayat Sync */}
+      {showHistory && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setShowHistory(false)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Riwayat Sinkronisasi GPS</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Waktu</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Periode</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Scope</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">OK/Gagal</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {(syncHistory?.data || []).length > 0 ? (
+                    (syncHistory?.data || []).map((log: any) => (
+                      <tr key={log.id} className="hover:bg-gray-50">
+                        <td className="px-3 py-2 whitespace-nowrap text-gray-600">{new Date(log.createdAt).toLocaleString('id-ID')}</td>
+                        <td className="px-3 py-2 whitespace-nowrap text-gray-600">{log.bulan}/{log.tahun}</td>
+                        <td className="px-3 py-2 text-gray-600 max-w-[160px] truncate" title={log.scope}>{log.scope}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            log.status === 'SUCCESS' ? 'bg-emerald-100 text-emerald-700'
+                            : log.status === 'PARTIAL' ? 'bg-amber-100 text-amber-700'
+                            : 'bg-red-100 text-red-700'
+                          }`}>{log.status}</span>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-right text-gray-600">{log.success}/{log.failed}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan={5} className="px-3 py-8 text-center text-gray-400">Belum ada riwayat sync.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex justify-end mt-4">
+              <button onClick={() => setShowHistory(false)}
                 className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">Tutup</button>
             </div>
           </div>

@@ -1,24 +1,28 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Database, BarChart3, DollarSign, Settings, LogOut, GitCompare, MapPin, ClipboardCheck, CalendarClock } from 'lucide-react'
+import { LayoutDashboard, Database, BarChart3, DollarSign, Settings, LogOut, GitCompare, MapPin, ClipboardCheck, CalendarClock, Car, CircleUser, ScrollText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '../contexts/AuthContext'
+import Avatar from './Avatar'
 import vorLogo from '@/assets/logo.png'
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-  { icon: Database, label: 'Master Data', path: '/master-data' },
   { icon: ClipboardCheck, label: 'Status Aktual', path: '/actual-status' },
   { icon: CalendarClock, label: 'Status Forecast', path: '/forecast-status' },
   { icon: GitCompare, label: 'Actual vs Forecast', path: '/actual-vs-forecast' },
   { icon: DollarSign, label: 'Pendapatan', path: '/revenue' },
-  { icon: MapPin, label: 'GPS Tracking', path: '/gps-tracking' },
+  { icon: MapPin, label: 'Analisa Jarak Tempuh', path: '/gps-tracking' },
+  { icon: Car, label: 'Live Tracking', path: '/live-tracking' },
   { icon: BarChart3, label: 'Laporan', path: '/reports' },
+  { icon: Database, label: 'Master Data', path: '/master-data' },
   { icon: Settings, label: 'Pengaturan', path: '/settings' },
+  { icon: ScrollText, label: 'Audit Log', path: '/audit-log' },
+  { icon: CircleUser, label: 'Akun Saya', path: '/account' },
 ]
 
 const restrictedRoles = ['SUPERVISOR', 'PLANNER']
 
-const restrictedMenuPaths = ['/settings']
+const restrictedMenuPaths = ['/settings', '/audit-log']
 
 export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const location = useLocation()
@@ -71,7 +75,23 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
           )
         })}
       </nav>
-      <div className="p-2 border-t border-white/10">
+      <div className="p-2 border-t border-white/10 space-y-1">
+        <Link
+          to="/account"
+          title={collapsed ? (user?.name || 'Akun Saya') : undefined}
+          className={cn(
+            'flex items-center rounded-xl transition-all hover:bg-white/5',
+            collapsed ? 'justify-center px-2 py-2' : 'gap-3 px-3 py-2'
+          )}
+        >
+          <Avatar seed={user?.avatarSeed || user?.email || 'user'} size={collapsed ? 32 : 36} />
+          {!collapsed && (
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-white">{user?.name || 'Pengguna'}</p>
+              <p className="truncate text-xs text-white/50">{user?.role || ''}</p>
+            </div>
+          )}
+        </Link>
         <button
           onClick={handleLogout}
           title="Logout"

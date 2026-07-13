@@ -125,6 +125,60 @@ export async function fetchMonthlyReport(
   return response.json()
 }
 
+// Catat hasil sync ke GpsSyncLog (best-effort) — dipakai manual & scheduler
+export async function writeGpsSyncLog(params: {
+  triggeredBy: string | null
+  scope: string
+  year: number
+  month: number
+  result: { total: number; success: number; failed: number; errors: string[] } | null
+  hardError?: string
+}): Promise<void> {
+  const { triggeredBy, scope, year, month, result, hardError } = params
+  const total = result?.total ?? 0
+  const success = result?.success ?? 0
+  const failed = result?.failed ?? (hardError ? 1 : 0)
+  const errors = (hardError ? [hardError, ...(result?.errors ?? [])] : result?.errors ?? []).slice(0, 50)
+  const status = hardError || (failed > 0 && success === 0) ? 'FAILED' : failed > 0 ? 'PARTIAL' : 'SUCCESS'
+
+  try {
+    await prisma.gpsSyncLog.create({
+      data: { triggeredBy, scope, tahun: year, bulan: month, total, success, failed, status, errors },
+    })
+  } catch {
+    /* best-effort */
+  }
+}
+
+export interface LastPosition {
+  latitude: number
+  longitude: number
+  lastupdate: string
+}
+
+// Live tracking: posisi terakhir 1 unit.
+// POST /api/lastposition/latlon/{vehicle_id} (body kosong), 1 unit per request.
+export async function fetchLastPosition(vehicleId: string): Promise<LastPosition> {
+  const response = await fetch(
+    `${GPS_API_BASE}/api/lastposition/latlon/${encodeURIComponent(vehicleId)}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        accept: 'application/json',
+        token: GPS_API_TOKEN,
+      },
+      body: JSON.stringify({}),
+    },
+  )
+
+  if (!response.ok) {
+    throw new Error(`EasyGo lastposition error ${response.status}: ${response.statusText}`)
+  }
+
+  return response.json()
+}
+
 function extractDayData(vehicle: EasyGoVehicleReport): Array<{
   nopol: string
   day: number

@@ -2,7 +2,8 @@ import express from 'express'
 import { asyncHandler } from '../middleware/error'
 import { authMiddleware, roleGuard } from '../middleware/auth'
 import * as gpsController from '../controllers/gps'
-import { syncMonthlyGpsData } from '../services/gps-integration'
+import { syncMonthlyGpsData, writeGpsSyncLog } from '../services/gps-integration'
+import { AuthRequest } from '../utils/types'
 
 const router = express.Router()
 
@@ -10,6 +11,8 @@ router.use(authMiddleware)
 
 // Get operations
 router.get('/date', asyncHandler(gpsController.getGpsTrackingByDate))
+router.get('/sync/history', roleGuard(['ADMIN']), asyncHandler(gpsController.getGpsSyncLogs))
+router.get('/live/:vehicleId', asyncHandler(gpsController.getLivePosition))
 router.get('/vehicle/:vehicleId', asyncHandler(gpsController.getGpsTrackingByVehicleAndDate))
 router.get('/:id', asyncHandler(gpsController.getGpsTrackingById))
 
@@ -32,9 +35,17 @@ router.post('/sync', roleGuard(['ADMIN']), asyncHandler(async (req, res) => {
   const noPolList = Array.isArray(lstNoPOL)
     ? lstNoPOL
     : (typeof nopol === 'string' && nopol.trim() ? [nopol.trim()] : [])
+  const scope = noPolList.length ? noPolList.join(', ') : 'ALL'
+  const triggeredBy = (req as AuthRequest).user?.id ?? null
 
-  const result = await syncMonthlyGpsData(year, month, noPolList)
-  res.json({ success: true, data: result })
+  try {
+    const result = await syncMonthlyGpsData(year, month, noPolList)
+    await writeGpsSyncLog({ triggeredBy, scope, year, month, result })
+    res.json({ success: true, data: result })
+  } catch (err) {
+    await writeGpsSyncLog({ triggeredBy, scope, year, month, result: null, hardError: (err as Error).message })
+    throw err
+  }
 }))
 
 export default router

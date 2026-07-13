@@ -1,5 +1,5 @@
 import cron from 'node-cron'
-import { syncMonthlyGpsData } from '../services/gps-integration'
+import { syncMonthlyGpsData, writeGpsSyncLog } from '../services/gps-integration'
 
 const GPS_SYNC_ENABLED = process.env.GPS_SYNC_ENABLED === 'true'
 const GPS_SYNC_CRON = process.env.GPS_SYNC_CRON || '0 2 * * *'
@@ -20,6 +20,7 @@ export function startGpsScheduler() {
     try {
       const result = await syncMonthlyGpsData(year, month)
       console.log(`[GPS Scheduler] Done: ${result.success} success, ${result.failed} failed`)
+      await writeGpsSyncLog({ triggeredBy: null, scope: 'ALL', year, month, result })
 
       if (result.errors.length > 0) {
         console.log(`[GPS Scheduler] Errors (${result.errors.length}):`)
@@ -27,6 +28,7 @@ export function startGpsScheduler() {
       }
     } catch (err) {
       console.error('[GPS Scheduler] Sync failed:', (err as Error).message)
+      await writeGpsSyncLog({ triggeredBy: null, scope: 'ALL', year, month, result: null, hardError: (err as Error).message })
     }
   })
 

@@ -22,6 +22,9 @@ import dashboardRoutes from './routes/dashboard'
 import reportingRoutes from './routes/reporting'
 import exportRoutes from './routes/export'
 import gpsRoutes from './routes/gps'
+import auditRoutes from './routes/audit'
+import notificationRoutes from './routes/notifications'
+import { auditLogger } from './middleware/audit'
 import { startGpsScheduler, logGpsStatus } from './jobs/gps-scheduler'
 
 const app = express()
@@ -33,6 +36,9 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cors({
   origin: process.env.CORS_ORIGIN?.split(',').map(s => s.trim()) || '*',
 }))
+
+// Audit trail: catat semua mutasi (setelah body & sebelum route agar bisa membungkus res.json)
+app.use(auditLogger)
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -60,6 +66,8 @@ app.use('/api/dashboard', dashboardRoutes)
 app.use('/api/reports', reportingRoutes)
 app.use('/api/export', exportRoutes)
 app.use('/api/gps', gpsRoutes)
+app.use('/api/audit-logs', auditRoutes)
+app.use('/api/notifications', notificationRoutes)
 
 // 404 handler
 app.use((req, res) => {

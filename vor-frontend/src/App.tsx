@@ -11,8 +11,11 @@ import ForecastStatus from './pages/ForecastStatus'
 import ActualVsForecast from './pages/ActualVsForecast'
 import Revenue from './pages/Revenue'
 import GpsTracking from './pages/GpsTracking'
+import LiveTracking from './pages/LiveTracking'
 import Reports from './pages/Reports'
 import Settings from './pages/Settings'
+import Account from './pages/Account'
+import AuditLog from './pages/AuditLog'
 import Layout from './components/Layout'
 
 // Register AG Grid modules
@@ -49,8 +52,11 @@ function App() {
                 <Route path="actual-vs-forecast" element={<ActualVsForecast />} />
                 <Route path="revenue" element={<Revenue />} />
                 <Route path="gps-tracking" element={<GpsTracking />} />
+                <Route path="live-tracking" element={<LiveTracking />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="settings" element={<Settings />} />
+                <Route path="account" element={<Account />} />
+                <Route path="audit-log" element={<AuditLog />} />
               </Route>
             </Route>
           </Routes>

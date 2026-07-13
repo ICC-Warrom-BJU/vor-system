@@ -3,6 +3,7 @@ import { AuthRequest, ApiResponse, AppError } from '../utils/types'
 import prisma from '../config/prisma'
 import { z } from 'zod'
 import { getVehicleCabangOrBranchFilter } from '../utils/cabangFilter'
+import { fetchLastPosition } from '../services/gps-integration'
 
 const createGpsSchema = z.object({
   vehicleId: z.string().min(1),
@@ -203,6 +204,46 @@ export const getGpsTrackingById = async (req: AuthRequest, res: Response) => {
     success: true,
     message: 'Data GPS berhasil diambil',
     data: gpsData,
+  } as ApiResponse<any>)
+}
+
+// Riwayat sinkronisasi GPS (ADMIN)
+export const getGpsSyncLogs = async (req: AuthRequest, res: Response) => {
+  if (req.user?.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, message: 'Hanya ADMIN yang dapat melihat riwayat sync' })
+  }
+  const logs = await prisma.gpsSyncLog.findMany({ orderBy: { createdAt: 'desc' }, take: 100 })
+  res.json({ success: true, message: 'Riwayat sync GPS berhasil diambil', data: logs } as ApiResponse<any>)
+}
+
+// Live tracking: ambil posisi terakhir 1 unit dari EasyGo (proxy, token tetap di server)
+export const getLivePosition = async (req: AuthRequest, res: Response) => {
+  const { vehicleId } = req.params
+
+  const vehicle = await prisma.vehicle.findUnique({ where: { id: vehicleId } })
+  if (!vehicle) {
+    throw new AppError('Kendaraan tidak ditemukan', 404)
+  }
+  if (!vehicle.vhcId) {
+    throw new AppError('Kendaraan belum memiliki VHCID (Vehicle ID EasyGo). Isi VHCID di master data terlebih dahulu.', 422)
+  }
+
+  const pos = await fetchLastPosition(vehicle.vhcId)
+  if (typeof pos?.latitude !== 'number' || typeof pos?.longitude !== 'number') {
+    throw new AppError('Posisi terakhir tidak tersedia dari EasyGo untuk unit ini.', 502)
+  }
+
+  res.json({
+    success: true,
+    message: 'Posisi terakhir berhasil diambil',
+    data: {
+      vehicleId: vehicle.id,
+      nopol: vehicle.nopol,
+      vhcId: vehicle.vhcId,
+      latitude: pos.latitude,
+      longitude: pos.longitude,
+      lastUpdate: pos.lastupdate,
+    },
   } as ApiResponse<any>)
 }
 

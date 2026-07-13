@@ -231,8 +231,9 @@ model RevenueData {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  @@unique([vehicleId, date])
+  // Multi-DO: satu baris per No. DO, boleh banyak baris per unit+tanggal (1 DO = 1 trip)
   @@index([date])
+  @@index([vehicleId, date])
 }
 
 model GpsTracking {
@@ -267,12 +268,15 @@ model User {
   branch              Branch?  @relation(fields: [branchId], references: [id])
   isActive            Boolean  @default(true)
   allowedVehicleTypes String[] @default([])
+  avatarSeed          String?  // seed untuk Multiavatar (jika null, pakai email)
   createdAt           DateTime @default(now())
+  auditLogs           AuditLog[]
 }
 
 model AuditLog {
   id        String   @id @default(cuid())
   userId    String
+  user      User     @relation(fields: [userId], references: [id])
   action    String
   entity    String
   entityId  String?
@@ -281,6 +285,22 @@ model AuditLog {
   createdAt DateTime @default(now())
 
   @@index([userId])
+  @@index([createdAt])
+}
+
+model GpsSyncLog {
+  id          String   @id @default(cuid())
+  triggeredBy String?  // userId; null jika dari scheduler otomatis
+  scope       String   // "ALL" atau daftar nopol yang di-sync
+  tahun       Int
+  bulan       Int
+  total       Int      @default(0)
+  success     Int      @default(0)
+  failed      Int      @default(0)
+  status      String   // SUCCESS | PARTIAL | FAILED
+  errors      String[] @default([])
+  createdAt   DateTime @default(now())
+
   @@index([createdAt])
 }
 
