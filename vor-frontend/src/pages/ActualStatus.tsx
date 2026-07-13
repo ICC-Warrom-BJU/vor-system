@@ -520,7 +520,7 @@ export default function ActualStatus() {
           <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-white/80 shadow-sm animate-dot-bounce" />
         ) : null}
         {isOverride ? (
-          <span className="absolute left-1 top-1 h-2 w-2 rounded-full bg-blue-500 ring-1 ring-white/70 shadow-sm" title="Customer/Driver berbeda dari default" />
+          <span className="absolute left-1 top-1 h-2 w-2 rounded-full bg-blue-500 ring-1 ring-white/70 shadow-sm animate-dot-bounce" title="Customer/Driver berbeda dari default" />
         ) : null}
         <span className="text-xs font-bold uppercase">{value.status || '-'}</span>
       </div>
