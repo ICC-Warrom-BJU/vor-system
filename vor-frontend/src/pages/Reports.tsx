@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Calendar, Download, TrendingUp, BarChart3, Gauge, AlertTriangle, PieChart } from 'lucide-react'
 
+// Format Rupiah lengkap dengan pemisah ribuan, mis. "Rp. 15.000.000"
+const formatRp = (n: number) => 'Rp. ' + Math.round(n || 0).toLocaleString('id-ID')
+
 export default function Reports() {
   const [startDate, setStartDate] = useState(
     new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -281,16 +284,16 @@ export default function Reports() {
                         {item.metrics?.totalTrips || 0}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        Rp {((item.metrics?.totalRevenue || 0) / 1000000).toFixed(1)}M
+                        {formatRp(item.metrics?.totalRevenue || 0)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-orange-600">
-                        Rp {((item.metrics?.totalBop || 0) / 1000000).toFixed(1)}M
+                        {formatRp(item.metrics?.totalBop || 0)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-orange-600">
-                        Rp {((item.metrics?.totalOther || 0) / 1000000).toFixed(1)}M
+                        {formatRp(item.metrics?.totalOther || 0)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        Rp {((item.metrics?.totalProfit || 0) / 1000000).toFixed(1)}M
+                        {formatRp(item.metrics?.totalProfit || 0)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {item.kpi?.KPA?.toFixed(1)}%
@@ -337,16 +340,16 @@ export default function Reports() {
                         {item.trips || 0}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        Rp {((item.revenue || 0) / 1000000).toFixed(1)}M
+                        {formatRp(item.revenue || 0)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-orange-600">
-                        Rp {((item.fuel || 0) / 1000000).toFixed(1)}M
+                        {formatRp(item.fuel || 0)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-orange-600">
-                        Rp {((item.other || 0) / 1000000).toFixed(1)}M
+                        {formatRp(item.other || 0)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        Rp {((item.profit || 0) / 1000000).toFixed(1)}M
+                        {formatRp(item.profit || 0)}
                       </td>
                     </tr>
                   ))}
