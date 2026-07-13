@@ -7,6 +7,7 @@ export default function ForecastStatus() {
   const [searchNopol, setSearchNopol] = useState('')
   const [searchStatus, setSearchStatus] = useState('')
   const [searchType, setSearchType] = useState('')
+  const [readyFilterType, setReadyFilterType] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
   const [generating, setGenerating] = useState(false)
@@ -237,6 +238,15 @@ export default function ForecastStatus() {
     }
   }
 
+  const READY_GROUP = 'READY FOR USE'
+
+  // Peta kode status -> group, untuk deteksi READY FOR USE.
+  const groupByCode = useMemo(() => {
+    const m = new Map<string, string>()
+    masterStatuses?.data?.forEach((ms: any) => m.set(ms.code, (ms.groupStatus || '').trim().toUpperCase()))
+    return m
+  }, [masterStatuses?.data])
+
   const filteredVehicles = useMemo(() => {
     if (!vehicles?.data) return []
     return vehicles.data.filter((vehicle: any) => {
@@ -246,9 +256,12 @@ export default function ForecastStatus() {
       const matchesNopol = !searchNopol || nopol.toLowerCase().includes(searchNopol.toLowerCase())
       const matchesStatus = !searchStatus || statusCode === searchStatus
       const matchesType = !searchType || vehicleType.toLowerCase().includes(searchType.toLowerCase())
-      return matchesNopol && matchesStatus && matchesType
+      // Filter dari panel READY FOR USE: hanya tipe terpilih & berstatus READY FOR USE.
+      const matchesReady = !readyFilterType ||
+        (vehicleType === readyFilterType && groupByCode.get(statusCode) === READY_GROUP)
+      return matchesNopol && matchesStatus && matchesType && matchesReady
     })
-  }, [vehicles?.data, formValues, searchNopol, searchStatus, searchType])
+  }, [vehicles?.data, formValues, searchNopol, searchStatus, searchType, readyFilterType, groupByCode])
 
   const statusGroupSummary = useMemo(() => {
     const counts = new Map<string, number>()
@@ -266,6 +279,23 @@ export default function ForecastStatus() {
 
     return Array.from(counts.entries()).sort((a, b) => b[1] - a[1])
   }, [forecastStatus?.data, masterStatuses?.data])
+
+  // Breakdown READY FOR USE per tipe unit (mengikuti tanggal & status terpilih di grid).
+  const readyForUse = useMemo(() => {
+    const byType = new Map<string, number>()
+    let total = 0
+    ;(vehicles?.data || []).forEach((v: any) => {
+      const code = formValues[v.id]?.statusCode
+      if (!code || groupByCode.get(code) !== READY_GROUP) return
+      total += 1
+      const t = v.vehicleType || 'Lainnya'
+      byType.set(t, (byType.get(t) || 0) + 1)
+    })
+    const list = Array.from(byType.entries())
+      .map(([type, count]) => ({ type, count }))
+      .sort((a, b) => b.count - a.count)
+    return { total, list, max: list.length ? list[0].count : 0 }
+  }, [vehicles?.data, formValues, groupByCode])
 
   const getConfidenceClass = (value: string) => {
     if (value === 'HIGH') return 'bg-emerald-100 text-emerald-800'
@@ -357,6 +387,55 @@ export default function ForecastStatus() {
             <p className="text-sm text-gray-500">Quantity unit berdasarkan status group</p>
           </div>
         ))}
+      </div>
+
+      {/* Panel READY FOR USE per Tipe Unit (untuk marketing cari DO/order) */}
+      <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 shadow-sm">
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <div>
+            <h2 className="text-sm font-bold text-gray-900">READY FOR USE — per Tipe Unit</h2>
+            <p className="text-xs text-gray-500">
+              Unit siap dipakai pada {new Date(selectedDate).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} — untuk pencarian DO/order sales.
+            </p>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-3xl font-bold text-blue-700 tabular-nums">{readyForUse.total}</p>
+            <p className="text-xs text-gray-500">total ready</p>
+          </div>
+        </div>
+
+        {readyFilterType && (
+          <button
+            onClick={() => setReadyFilterType(null)}
+            className="mb-2 inline-flex items-center gap-1 text-xs font-medium text-blue-700 hover:text-blue-900"
+          >
+            Filter tipe "{readyFilterType}" aktif — klik untuk hapus ✕
+          </button>
+        )}
+
+        {readyForUse.list.length === 0 ? (
+          <p className="text-sm text-gray-500">Belum ada unit READY FOR USE pada tanggal ini.</p>
+        ) : (
+          <div className="space-y-1.5">
+            {readyForUse.list.map(({ type, count }) => {
+              const active = readyFilterType === type
+              return (
+                <button
+                  key={type}
+                  onClick={() => setReadyFilterType(active ? null : type)}
+                  title="Klik untuk memfilter tabel ke tipe ini"
+                  className={`w-full flex items-center gap-3 rounded-lg px-2 py-1.5 text-left transition ${active ? 'bg-blue-100 ring-1 ring-blue-300' : 'hover:bg-white'}`}
+                >
+                  <span className="w-36 shrink-0 text-sm font-medium text-gray-700 truncate">{type}</span>
+                  <span className="flex-1 h-3 rounded-full bg-blue-100 overflow-hidden">
+                    <span className="block h-full bg-blue-500 rounded-full transition-all" style={{ width: `${readyForUse.max ? (count / readyForUse.max) * 100 : 0}%` }} />
+                  </span>
+                  <span className="w-8 text-right text-sm font-bold text-blue-700 tabular-nums">{count}</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
