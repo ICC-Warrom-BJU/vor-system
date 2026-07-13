@@ -267,7 +267,7 @@ export default function Reports() {
                       Biaya Lain
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Profit
+                      Gross Profit
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       KPA
@@ -326,7 +326,7 @@ export default function Reports() {
                       Biaya Lain
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Profit
+                      Gross Profit
                     </th>
                   </tr>
                 </thead>

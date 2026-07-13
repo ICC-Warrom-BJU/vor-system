@@ -630,8 +630,8 @@ export default function Dashboard() {
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold text-gray-800">Trend Profit Harian</h3>
-              <p className="text-sm text-gray-500">Multi-series area chart — Revenue, Expense & Profit.</p>
+              <h3 className="text-lg font-semibold text-gray-800">Trend Gross Profit Harian</h3>
+              <p className="text-sm text-gray-500">Multi-series area chart — Revenue, Expense & Gross Profit.</p>
             </div>
             <div className="flex items-center gap-4 text-xs">
               <span className="inline-flex items-center gap-1.5">
@@ -641,7 +641,7 @@ export default function Dashboard() {
                 <span className="w-3 h-3 rounded-sm bg-blue-500"></span>Expense
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-sm bg-orange-500"></span>Profit
+                <span className="w-3 h-3 rounded-sm bg-orange-500"></span>Gross Profit
               </span>
             </div>
           </div>
@@ -681,7 +681,7 @@ export default function Dashboard() {
                 />
                 <Tooltip
                   formatter={(value: any, name: any) => {
-                    const labels: Record<string, string> = { revenue: 'Revenue', expense: 'Expense', profit: 'Profit' }
+                    const labels: Record<string, string> = { revenue: 'Revenue', expense: 'Expense', profit: 'Gross Profit' }
                     const actual = value != null ? Math.round((value / 100) * globalMax) : 0
                     return [`Rp ${actual.toLocaleString('id-ID')} (${value != null ? Number(value).toFixed(1) : '-'}%)`, labels[name] || name] as any
                   }}
@@ -743,7 +743,7 @@ export default function Dashboard() {
           </div>
 
           <div className="bg-white rounded-3xl shadow-sm p-6 border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Trend Profit Harian per Unit</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Trend Gross Profit Harian per Unit</h3>
             <div className="space-y-4 max-h-[340px] overflow-y-auto">
               <div className="flex items-center justify-between text-sm text-slate-500 mb-3">
                 <span>Unit</span>
