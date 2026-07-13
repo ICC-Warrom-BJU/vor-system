@@ -7,12 +7,13 @@ interface User {
   role: string
   cabang: string | null
   avatarSeed?: string | null
+  twoFactorEnabled?: boolean
 }
 
 interface AuthContextType {
   user: User | null
   token: string | null
-  login: (email: string, password: string, roleFilter?: { allow?: string; deny?: string }) => Promise<void>
+  login: (email: string, password: string, roleFilter?: { allow?: string; deny?: string }, code?: string) => Promise<void>
   logout: () => void
   updateUser: (partial: Partial<User>) => void
   isAuthenticated: boolean
@@ -73,13 +74,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const login = async (email: string, password: string, roleFilter?: { allow?: string; deny?: string }) => {
+  const login = async (email: string, password: string, roleFilter?: { allow?: string; deny?: string }, code?: string) => {
     let response: Response
     try {
       response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, ...(code ? { code } : {}) }),
       })
     } catch {
       throw new Error('Tidak dapat terhubung ke server. Pastikan server backend berjalan.')
@@ -97,6 +98,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data = JSON.parse(raw)
     } catch {
       throw new Error('Respons server tidak valid. Pastikan alamat API sudah benar.')
+    }
+
+    // Password benar tapi butuh kode 2FA → beri sinyal ke halaman login.
+    if (data.twoFactorRequired) {
+      const err = new Error(data.message || 'Masukkan kode autentikasi 2FA') as Error & { twoFactorRequired?: boolean }
+      err.twoFactorRequired = true
+      throw err
     }
 
     if (data.success) {

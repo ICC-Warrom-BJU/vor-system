@@ -5,6 +5,7 @@ import { AuthRequest, AppError, ApiResponse } from '../utils/types'
 import prisma from '../config/prisma'
 import { loginSchema, LoginRequest } from '../utils/validators'
 import { JWT_SECRET, JWT_EXPIRES_IN } from '../config/env'
+import { authenticator } from 'otplib'
 
 export const login = async (req: AuthRequest, res: Response) => {
   const parsed = loginSchema.safeParse(req.body)
@@ -53,6 +54,31 @@ export const login = async (req: AuthRequest, res: Response) => {
     })
   }
 
+  // 2FA (TOTP): bila aktif, wajib kode 6 digit yang valid sebelum token diterbitkan.
+  if (user.twoFactorEnabled && user.twoFactorSecret) {
+    const code = String(req.body?.code || '').trim()
+    if (!code) {
+      // Password benar tapi kode belum dikirim → minta kode (belum terbitkan token).
+      return res.status(200).json({
+        success: false,
+        twoFactorRequired: true,
+        message: 'Masukkan kode autentikasi 2FA',
+      })
+    }
+    const valid = authenticator.verify({ token: code, secret: user.twoFactorSecret })
+    if (!valid) {
+      return res.status(401).json({
+        success: false,
+        twoFactorRequired: true,
+        message: 'Kode autentikasi 2FA tidak valid',
+      })
+    }
+  }
+
+  // ADMIN wajib 2FA: bila belum aktif, tetap login tapi tandai agar frontend
+  // memaksa proses setup sebelum akses fitur lain.
+  const mustEnable2FA = user.role === 'ADMIN' && !user.twoFactorEnabled
+
   const token = jwt.sign(
     {
       id: user.id,
@@ -80,6 +106,8 @@ export const login = async (req: AuthRequest, res: Response) => {
         branch: user.branch ? { id: user.branch.id, name: user.branch.name } : undefined,
         allowedVehicleTypes: user.allowedVehicleTypes,
         avatarSeed: user.avatarSeed,
+        twoFactorEnabled: user.twoFactorEnabled,
+        mustEnable2FA,
       },
       token,
     },

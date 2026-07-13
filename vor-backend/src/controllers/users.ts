@@ -54,6 +54,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
       },
       allowedVehicleTypes: true,
       avatarSeed: true,
+      twoFactorEnabled: true,
       createdAt: true,
     },
     orderBy: { createdAt: 'desc' },
@@ -87,6 +88,7 @@ export const getUserById = async (req: AuthRequest, res: Response) => {
       },
       allowedVehicleTypes: true,
       avatarSeed: true,
+      twoFactorEnabled: true,
       createdAt: true,
     },
   })
@@ -120,6 +122,7 @@ export const getCurrentUser = async (req: AuthRequest, res: Response) => {
       },
       allowedVehicleTypes: true,
       avatarSeed: true,
+      twoFactorEnabled: true,
       createdAt: true,
     },
   })
@@ -194,6 +197,7 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
       },
       allowedVehicleTypes: true,
       avatarSeed: true,
+      twoFactorEnabled: true,
       createdAt: true,
     },
   })
@@ -304,6 +308,7 @@ export const createUser = async (req: AuthRequest, res: Response) => {
       },
       allowedVehicleTypes: true,
       avatarSeed: true,
+      twoFactorEnabled: true,
       createdAt: true,
     },
   })
@@ -385,6 +390,7 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
       },
       allowedVehicleTypes: true,
       avatarSeed: true,
+      twoFactorEnabled: true,
       createdAt: true,
     },
   })
@@ -446,6 +452,7 @@ export const getUsersByRole = async (req: AuthRequest, res: Response) => {
       },
       allowedVehicleTypes: true,
       avatarSeed: true,
+      twoFactorEnabled: true,
       createdAt: true,
     },
     orderBy: { createdAt: 'desc' },

@@ -269,6 +269,8 @@ model User {
   isActive            Boolean  @default(true)
   allowedVehicleTypes String[] @default([])
   avatarSeed          String?  // seed untuk Multiavatar (jika null, pakai email)
+  twoFactorEnabled    Boolean  @default(false)
+  twoFactorSecret     String?  // secret TOTP (base32); null jika 2FA tidak aktif
   createdAt           DateTime @default(now())
   auditLogs           AuditLog[]
 }

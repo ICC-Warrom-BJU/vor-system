@@ -25,6 +25,7 @@ import exportRoutes from './routes/export'
 import gpsRoutes from './routes/gps'
 import auditRoutes from './routes/audit'
 import notificationRoutes from './routes/notifications'
+import twoFactorRoutes from './routes/twofa'
 import { auditLogger } from './middleware/audit'
 import { startGpsScheduler, logGpsStatus } from './jobs/gps-scheduler'
 
@@ -80,6 +81,7 @@ app.get('/api/health', (req, res) => {
 // Auth routes (public). Register DIHAPUS dari endpoint publik (SEC-01):
 // pembuatan user hanya lewat POST /api/users (khusus ADMIN, ber-auth).
 app.post('/api/auth/login', loginLimiter, asyncHandler(login))
+app.use('/api/auth/2fa', twoFactorRoutes)
 
 // Protected routes
 app.use('/api/vehicles', vehicleRoutes)

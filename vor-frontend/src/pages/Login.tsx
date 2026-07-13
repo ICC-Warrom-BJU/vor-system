@@ -24,6 +24,8 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [code, setCode] = useState('')
+  const [twoFaStep, setTwoFaStep] = useState(false)
   const navigate = useNavigate()
   const { login } = useAuth()
 
@@ -44,11 +46,27 @@ export default function Login() {
     try {
       const roleFilter = tab === 'admin' ? { allow: 'Admin' } : { deny: 'Admin' }
       setNotice('')
-      await login(email, password, roleFilter)
+      await login(email, password, roleFilter, twoFaStep ? code : undefined)
       navigate('/dashboard')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Terjadi kesalahan saat login')
+      const e2 = err as Error & { twoFactorRequired?: boolean }
+      if (e2.twoFactorRequired) {
+        if (twoFaStep) {
+          setError(e2.message || 'Kode autentikasi tidak valid')
+        } else {
+          setTwoFaStep(true)
+          setError('')
+        }
+        return
+      }
+      setError(e2 instanceof Error ? e2.message : 'Terjadi kesalahan saat login')
     }
+  }
+
+  const resetToPassword = () => {
+    setTwoFaStep(false)
+    setCode('')
+    setError('')
   }
 
   return (
@@ -82,7 +100,7 @@ export default function Login() {
             {(['karyawan', 'admin'] as LoginTab[]).map((t) => (
               <button
                 key={t}
-                onClick={() => { setTab(t); setError('') }}
+                onClick={() => { setTab(t); setError(''); resetToPassword() }}
                 className={`relative z-10 flex-1 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
                   tab === t ? 'text-white' : 'text-white/60 hover:text-white/80'
                 }`}
@@ -105,41 +123,81 @@ export default function Login() {
           )}
 
           <form key={tab} onSubmit={handleSubmit} className="space-y-5 animate-fade-up">
-            <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-emerald-400 focus:border-transparent outline-none transition-all backdrop-blur-sm"
-                placeholder={current.emailPlaceholder}
-                required
-              />
-              <p className="text-white/40 text-xs mt-1">{current.emailHint}</p>
-            </div>
+            {!twoFaStep ? (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-white/80 mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-emerald-400 focus:border-transparent outline-none transition-all backdrop-blur-sm"
+                    placeholder={current.emailPlaceholder}
+                    required
+                  />
+                  <p className="text-white/40 text-xs mt-1">{current.emailHint}</p>
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-emerald-400 focus:border-transparent outline-none transition-all backdrop-blur-sm"
-                placeholder="••••••••"
-                required
-              />
-            </div>
+                <div>
+                  <label className="block text-sm font-medium text-white/80 mb-2">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-emerald-400 focus:border-transparent outline-none transition-all backdrop-blur-sm"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
 
-            <button
-              type="submit"
-              className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-white py-3 rounded-xl font-semibold hover:from-emerald-400 hover:to-cyan-400 transition-all shadow-lg shadow-emerald-500/25 active:scale-[0.98]"
-            >
-              Login
-            </button>
+                <button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-white py-3 rounded-xl font-semibold hover:from-emerald-400 hover:to-cyan-400 transition-all shadow-lg shadow-emerald-500/25 active:scale-[0.98]"
+                >
+                  Login
+                </button>
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-white/80 mb-2">
+                    Kode Autentikasi (2FA)
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    autoFocus
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white text-center text-2xl tracking-[0.5em] placeholder-white/30 focus:ring-2 focus:ring-emerald-400 focus:border-transparent outline-none transition-all backdrop-blur-sm"
+                    placeholder="000000"
+                    maxLength={6}
+                    required
+                  />
+                  <p className="text-white/40 text-xs mt-1">Masukkan 6 digit dari aplikasi authenticator Anda.</p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={code.length !== 6}
+                  className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-white py-3 rounded-xl font-semibold hover:from-emerald-400 hover:to-cyan-400 transition-all shadow-lg shadow-emerald-500/25 active:scale-[0.98] disabled:opacity-50"
+                >
+                  Verifikasi
+                </button>
+                <button
+                  type="button"
+                  onClick={resetToPassword}
+                  className="w-full text-white/50 hover:text-white/80 text-sm transition-colors"
+                >
+                  ← Kembali
+                </button>
+              </>
+            )}
           </form>
 
           <div className="mt-6 text-center text-sm text-white/40">
