@@ -73,6 +73,7 @@ export const createRevenueData = async (req: AuthRequest, res: Response) => {
       otherExpense: body.otherExpense || 0,
       profit,
       notes: body.notes,
+      customerId: vehicle.customerId, // snapshot dari penugasan unit
       recordedBy: req.user!.id,
     },
     include: {
@@ -336,6 +337,14 @@ export const bulkUpdateRevenueData = async (
 
   const results = []
 
+  // Preload penugasan unit untuk snapshot customerId saat create.
+  const vehicleIds = [...new Set(updates.map((u: any) => u.vehicleId).filter(Boolean))]
+  const vehiclesForBulk = await prisma.vehicle.findMany({
+    where: { id: { in: vehicleIds as string[] } },
+    select: { id: true, customerId: true },
+  })
+  const vehicleCustomerMap = new Map(vehiclesForBulk.map((v) => [v.id, v.customerId]))
+
   for (const update of updates) {
     const { vehicleId, date, deliveryOrder, totalRevenue, fuelExpense, otherExpense = 0, notes } = update
 
@@ -391,6 +400,7 @@ export const bulkUpdateRevenueData = async (
             otherExpense,
             profit,
             notes,
+            customerId: vehicleCustomerMap.get(vehicleId) ?? null,
             recordedBy: req.user!.id,
           },
         })

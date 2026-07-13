@@ -609,3 +609,85 @@ export const getUtilizationAnalysis = async (req: AuthRequest, res: Response) =>
     },
   } as ApiResponse<any>)
 }
+
+// Analisa Customer: agregasi revenue per customer (snapshot customerId di RevenueData).
+export const getCustomerAnalysis = async (req: AuthRequest, res: Response) => {
+  const { startDate, endDate, vehicleType, branchId } = req.query
+
+  if (!startDate || !endDate) {
+    throw new AppError('Parameter startDate dan endDate harus diberikan', 400)
+  }
+
+  const start = new Date(startDate as string)
+  start.setHours(0, 0, 0, 0)
+  const end = new Date(endDate as string)
+  end.setHours(23, 59, 59, 999)
+  if (start > end) throw new AppError('startDate harus lebih awal dari endDate', 400)
+
+  const revenueWhere: any = {
+    date: { gte: start, lte: end },
+    ...getVehicleCabangFilter(req),
+    ...getVehicleRelationTypeFilter(req),
+  }
+  if (vehicleType || branchId) {
+    revenueWhere.vehicle = revenueWhere.vehicle || {}
+    if (vehicleType) revenueWhere.vehicle.vehicleType = vehicleType
+    if (branchId) revenueWhere.vehicle.branchId = branchId
+  }
+
+  const revenues = await prisma.revenueData.findMany({
+    where: revenueWhere,
+    include: { customer: { select: { id: true, name: true } } },
+  })
+
+  const totalRevenueAll = revenues.reduce((s, r) => s + r.totalRevenue, 0)
+
+  type Agg = { customerId: string | null; customerName: string; revenue: number; bop: number; other: number; grossProfit: number; trips: number; units: Set<string> }
+  const map = new Map<string, Agg>()
+  for (const r of revenues) {
+    const key = r.customerId || 'UNASSIGNED'
+    const g = map.get(key) || {
+      customerId: r.customerId,
+      customerName: (r as any).customer?.name || '(Tanpa Customer)',
+      revenue: 0, bop: 0, other: 0, grossProfit: 0, trips: 0, units: new Set<string>(),
+    }
+    g.revenue += r.totalRevenue
+    g.bop += r.fuelExpense
+    g.other += r.otherExpense
+    g.grossProfit += r.profit
+    g.trips += r.tripCount
+    g.units.add(r.vehicleId)
+    map.set(key, g)
+  }
+
+  const report = Array.from(map.values())
+    .map((g) => ({
+      customerId: g.customerId,
+      customerName: g.customerName,
+      revenue: g.revenue,
+      bop: g.bop,
+      other: g.other,
+      grossProfit: g.grossProfit,
+      trips: g.trips,
+      unitCount: g.units.size,
+      margin: g.revenue > 0 ? Math.round((g.grossProfit / g.revenue) * 100 * 100) / 100 : 0,
+      share: totalRevenueAll > 0 ? Math.round((g.revenue / totalRevenueAll) * 100 * 100) / 100 : 0,
+      avgRevenuePerTrip: g.trips > 0 ? Math.round(g.revenue / g.trips) : 0,
+    }))
+    .sort((a, b) => b.revenue - a.revenue)
+
+  const totals = {
+    revenue: totalRevenueAll,
+    bop: revenues.reduce((s, r) => s + r.fuelExpense, 0),
+    other: revenues.reduce((s, r) => s + r.otherExpense, 0),
+    grossProfit: revenues.reduce((s, r) => s + r.profit, 0),
+    trips: revenues.reduce((s, r) => s + r.tripCount, 0),
+    customerCount: report.length,
+  }
+
+  res.json({
+    success: true,
+    message: 'Analisa customer berhasil diambil',
+    data: { dateRange: { startDate, endDate }, report, totals },
+  } as ApiResponse<any>)
+}

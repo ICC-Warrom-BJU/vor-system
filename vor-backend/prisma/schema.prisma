@@ -71,6 +71,7 @@ model Customer {
   isActive    Boolean   @default(true)
   vehicles    Vehicle[]
   actualStatuses ActualStatus[]
+  revenues    RevenueData[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
@@ -232,7 +233,9 @@ model RevenueData {
   otherExpense   Float    @default(0)
   profit         Float
   notes          String?
+  customerId     String?    // snapshot customer (default dari unit saat input)
   vehicle      Vehicle  @relation(fields: [vehicleId], references: [id])
+  customer     Customer? @relation(fields: [customerId], references: [id], onDelete: Restrict)
   recordedBy   String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

@@ -92,6 +92,7 @@ export default function Reports() {
   const { data: breakdownDetail } = useQuery(queryOpts('breakdownDetail', `/api/reports/breakdown-detail?${filterParams()}`, 'breakdown-detail'))
   const { data: unitPerformance } = useQuery(queryOpts('unitPerformance', `/api/reports/unit-performance?${filterParams()}`, 'unit-performance'))
   const { data: kpiTrend } = useQuery(queryOpts('kpiTrend', `/api/reports/kpi-trend?${filterParams()}`, 'kpi-trend'))
+  const { data: customerAnalysis } = useQuery(queryOpts('customerAnalysis', `/api/reports/customer-analysis?${filterParams()}`, 'customer-analysis'))
   const { data: utilizationAnalysis } = useQuery(queryOpts('utilizationAnalysis', `/api/reports/utilization-analysis?${filterParams()}`, 'utilization-analysis'))
 
   return (
@@ -188,6 +189,19 @@ export default function Reports() {
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" />
                 <span>Analisis Revenue</span>
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('customer-analysis')}
+              className={`px-4 py-3 border-b-2 font-medium transition-colors ${
+                activeTab === 'customer-analysis'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <PieChart className="w-4 h-4" />
+                <span>Analisa Customer</span>
               </div>
             </button>
             <button
@@ -353,6 +367,45 @@ export default function Reports() {
                       </td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {activeTab === 'customer-analysis' && (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trip</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">BOP</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Biaya Lain</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gross Profit</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Margin</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Share</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {customerAnalysis?.data?.report?.length > 0 ? (
+                    customerAnalysis.data.report.map((item: any) => (
+                      <tr key={item.customerId || 'unassigned'} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.customerName}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.unitCount}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.trips}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatRp(item.revenue)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-orange-600">{formatRp(item.bop)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-orange-600">{formatRp(item.other)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{formatRp(item.grossProfit)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.margin}%</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.share}%</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan={9} className="px-6 py-12 text-center text-gray-500">Belum ada data revenue pada rentang tanggal ini.</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>

@@ -28,4 +28,7 @@ router.get('/compliance', asyncHandler(reportingController.getComplianceReport))
 // Utilization analysis
 router.get('/utilization-analysis', asyncHandler(reportingController.getUtilizationAnalysis))
 
+// Customer analysis (revenue per customer)
+router.get('/customer-analysis', asyncHandler(reportingController.getCustomerAnalysis))
+
 export default router
