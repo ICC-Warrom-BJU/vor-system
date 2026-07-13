@@ -1,0 +1,325 @@
+<title>Laporan Security Testing — Backend VOR</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --surface-2: #eef1f5;
+    --border: #e1e5ec;
+    --border-strong: #c8cfdb;
+    --ink-1: #161a22;
+    --ink-2: #4a5262;
+    --ink-3: #727b8c;
+    --accent: #4338ca;
+    --accent-soft: #e0e0fb;
+    --crit: #b91c1c;      --crit-soft: #fbe0e0;
+    --high: #c2410c;      --high-soft: #fbe7d6;
+    --med: #b45309;       --med-soft: #faeccb;
+    --low: #4b5563;       --low-soft: #e6e9ee;
+    --ok: #15803d;        --ok-soft: #dcf3e4;
+    --code-bg: #f2f4f8;   --code-ink: #29303d;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1017; --surface: #151a23; --surface-2: #1b212c; --border: #2a323f; --border-strong: #3a4453;
+      --ink-1: #e9edf4; --ink-2: #aab3c2; --ink-3: #7c8697; --accent: #a5b4fc; --accent-soft: #1e2143;
+      --crit: #f87171; --crit-soft: #331416; --high: #fb923c; --high-soft: #331e10; --med: #fbbf24; --med-soft: #33260c;
+      --low: #9aa5b4; --low-soft: #222833; --ok: #4ade80; --ok-soft: #16301f; --code-bg: #10151d; --code-ink: #c6d0de;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg:#f5f6f8; --surface:#fff; --surface-2:#eef1f5; --border:#e1e5ec; --border-strong:#c8cfdb;
+    --ink-1:#161a22; --ink-2:#4a5262; --ink-3:#727b8c; --accent:#4338ca; --accent-soft:#e0e0fb;
+    --crit:#b91c1c; --crit-soft:#fbe0e0; --high:#c2410c; --high-soft:#fbe7d6; --med:#b45309; --med-soft:#faeccb;
+    --low:#4b5563; --low-soft:#e6e9ee; --ok:#15803d; --ok-soft:#dcf3e4; --code-bg:#f2f4f8; --code-ink:#29303d;
+  }
+  :root[data-theme="dark"] {
+    --bg:#0d1017; --surface:#151a23; --surface-2:#1b212c; --border:#2a323f; --border-strong:#3a4453;
+    --ink-1:#e9edf4; --ink-2:#aab3c2; --ink-3:#7c8697; --accent:#a5b4fc; --accent-soft:#1e2143;
+    --crit:#f87171; --crit-soft:#331416; --high:#fb923c; --high-soft:#331e10; --med:#fbbf24; --med-soft:#33260c;
+    --low:#9aa5b4; --low-soft:#222833; --ok:#4ade80; --ok-soft:#16301f; --code-bg:#10151d; --code-ink:#c6d0de;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink-1); font-family:var(--sans); line-height:1.6; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width: 980px; margin:0 auto; padding:0 24px 96px; }
+
+  header.doc { background:linear-gradient(155deg,var(--surface) 0%,var(--surface-2) 100%); border-bottom:1px solid var(--border); padding:40px 24px 32px; }
+  .header-inner { max-width:980px; margin:0 auto; }
+  .eyebrow { font-size:12px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin:0 0 12px; display:inline-flex; align-items:center; gap:8px; }
+  .eyebrow::before { content:"🛡"; font-size:14px; }
+  h1.title { font-size:clamp(26px,4.5vw,38px); line-height:1.15; margin:0 0 8px; font-weight:800; letter-spacing:-.02em; text-wrap:balance; }
+  .subtitle { color:var(--ink-2); font-size:16px; margin:0 0 24px; max-width:64ch; }
+  .meta-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+  .meta-cell { background:var(--surface); padding:12px 16px; }
+  .meta-cell .k { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3); font-weight:700; }
+  .meta-cell .v { font-size:14px; color:var(--ink-1); font-weight:600; margin-top:3px; }
+
+  section { margin-top:48px; scroll-margin-top:24px; }
+  h2 { font-size:20px; font-weight:800; letter-spacing:-.01em; margin:0 0 6px; display:flex; align-items:baseline; gap:12px; }
+  h2 .num { font-family:var(--mono); font-size:13px; color:var(--accent); background:var(--accent-soft); padding:2px 8px; border-radius:6px; font-weight:700; }
+  .section-lead { color:var(--ink-2); margin:6px 0 18px; max-width:70ch; }
+
+  .metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-top:20px; }
+  .metric { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px; position:relative; overflow:hidden; }
+  .metric::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--accent); }
+  .metric.crit::before { background:var(--crit); }
+  .metric.ok::before { background:var(--ok); }
+  .metric .big { font-size:30px; font-weight:800; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+  .metric.crit .big { color:var(--crit); }
+  .metric.ok .big { color:var(--ok); }
+  .metric .lbl { font-size:12.5px; color:var(--ink-2); margin-top:2px; }
+
+  .table-scroll { overflow-x:auto; border:1px solid var(--border); border-radius:12px; margin-top:12px; }
+  table { border-collapse:collapse; width:100%; font-size:13.5px; min-width:560px; }
+  thead th { background:var(--surface-2); text-align:left; padding:11px 14px; font-weight:700; color:var(--ink-2); font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--border-strong); white-space:nowrap; }
+  tbody td { padding:11px 14px; border-bottom:1px solid var(--border); color:var(--ink-1); vertical-align:top; }
+  tbody tr:last-child td { border-bottom:none; }
+  tbody tr { background:var(--surface); }
+  tbody tr:nth-child(even) { background:var(--surface-2); }
+  .idcell { font-family:var(--mono); font-size:12.5px; color:var(--ink-2); white-space:nowrap; font-weight:600; }
+  .num-col { font-variant-numeric:tabular-nums; }
+
+  .pill { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; padding:2px 9px; border-radius:999px; white-space:nowrap; line-height:1.5; }
+  .pill.crit { color:var(--crit); background:var(--crit-soft); }
+  .pill.high { color:var(--high); background:var(--high-soft); }
+  .pill.med  { color:var(--med);  background:var(--med-soft); }
+  .pill.low  { color:var(--low);  background:var(--low-soft); }
+  .pill.fixed { color:var(--ok); background:var(--ok-soft); }
+  .pill.fixed::before { content:"✓"; font-weight:800; }
+  .tag { display:inline-block; font-size:11px; font-weight:600; color:var(--ink-3); background:var(--surface-2); border:1px solid var(--border); padding:1px 7px; border-radius:5px; }
+
+  /* Finding cards */
+  .finding { border:1px solid var(--border); border-radius:14px; margin-top:18px; overflow:hidden; background:var(--surface); }
+  .finding > .fhead { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:14px 18px; border-bottom:1px solid var(--border); }
+  .finding.sev-crit > .fhead { background:var(--crit-soft); }
+  .finding.sev-high > .fhead { background:var(--high-soft); }
+  .finding.sev-med  > .fhead { background:var(--med-soft); }
+  .finding.sev-low  > .fhead { background:var(--low-soft); }
+  .fhead .fid { font-family:var(--mono); font-weight:800; font-size:14px; }
+  .fhead .ftitle { font-weight:700; font-size:15px; flex:1; min-width:180px; }
+  .fbody { padding:6px 18px 18px; }
+  .fbody h4 { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-3); margin:16px 0 6px; font-weight:700; }
+  .fbody p { margin:0; color:var(--ink-1); font-size:14px; }
+  .fbody code { font-family:var(--mono); font-size:12.5px; background:var(--code-bg); color:var(--code-ink); padding:1px 5px; border-radius:4px; }
+  pre { margin:8px 0 0; background:var(--code-bg); color:var(--code-ink); border:1px solid var(--border); border-radius:10px; padding:12px 14px; overflow-x:auto; font-family:var(--mono); font-size:12.5px; line-height:1.55; }
+  .verify { border-left:3px solid var(--ok); background:var(--ok-soft); border-radius:0 8px 8px 0; padding:10px 14px; margin-top:8px; font-size:13.5px; }
+  .verify code { background:transparent; padding:0; color:var(--ink-1); }
+
+  .callout { border:1px solid var(--border); border-left:3px solid var(--accent); background:var(--surface); border-radius:10px; padding:14px 18px; margin-top:16px; color:var(--ink-2); font-size:14px; }
+  .callout strong { color:var(--ink-1); }
+
+  ul.clean { list-style:none; padding:0; margin:16px 0 0; display:grid; gap:9px; }
+  ul.clean li { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 15px; display:flex; gap:11px; align-items:flex-start; font-size:14px; }
+  ul.clean li .tick { color:var(--ok); font-weight:800; flex-shrink:0; }
+
+  footer.doc { margin-top:56px; padding-top:24px; border-top:1px solid var(--border); color:var(--ink-3); font-size:13px; text-align:center; }
+  .divider { height:1px; background:var(--border); border:none; margin:40px 0 0; }
+</style>
+
+<header class="doc">
+  <div class="header-inner">
+    <p class="eyebrow">Laporan Security Testing</p>
+    <h1 class="title">Security Testing — Backend VOR</h1>
+    <p class="subtitle">Audit keamanan backend sistem manajemen armada BJU (VOR) — white-box code review &amp; live exploit verification, sebelum serah-terima ke tim QA &amp; Security.</p>
+    <div class="meta-grid">
+      <div class="meta-cell"><div class="k">Temuan</div><div class="v">7 (1 Critical)</div></div>
+      <div class="meta-cell"><div class="k">Remediasi</div><div class="v">100% Fixed &amp; Verified</div></div>
+      <div class="meta-cell"><div class="k">Tanggal</div><div class="v">13 Jul 2026</div></div>
+      <div class="meta-cell"><div class="k">Metode</div><div class="v">Code Review + Live PoC</div></div>
+      <div class="meta-cell"><div class="k">Commit</div><div class="v">b415ea0 · 48f317d</div></div>
+      <div class="meta-cell"><div class="k">Deploy</div><div class="v">Produksi (verified)</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section id="ringkasan">
+    <h2><span class="num">01</span> Ringkasan Eksekutif</h2>
+    <p class="section-lead">Audit keamanan menyeluruh terhadap autentikasi, otorisasi (RBAC), manajemen secret, konfigurasi HTTP, rate-limiting, dan kebocoran informasi. Ditemukan <strong>7 temuan</strong> (1 Critical, 2 High, 3 Medium, 1 Low). <strong>Seluruhnya telah diperbaiki, di-deploy ke produksi, dan diverifikasi live.</strong> Temuan paling kritis (SEC-01) memungkinkan siapa pun di internet membuat akun ADMIN — dan sempat aktif di produksi sebelum diperbaiki.</p>
+    <div class="metrics">
+      <div class="metric crit"><div class="big">1</div><div class="lbl">Critical (SEC-01)</div></div>
+      <div class="metric"><div class="big">7</div><div class="lbl">Total temuan</div></div>
+      <div class="metric ok"><div class="big">100%</div><div class="lbl">Remediated &amp; verified</div></div>
+      <div class="metric ok"><div class="big">0</div><div class="lbl">Temuan terbuka</div></div>
+    </div>
+    <div class="table-scroll" style="margin-top:18px;">
+      <table>
+        <thead><tr><th>Severity</th><th class="num-col">Jumlah</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pill crit">🔴 Critical</span></td><td class="num-col">1</td><td><span class="pill fixed">Fixed &amp; verified</span></td></tr>
+          <tr><td><span class="pill high">🟠 High</span></td><td class="num-col">2</td><td><span class="pill fixed">Fixed &amp; verified</span></td></tr>
+          <tr><td><span class="pill med">🟡 Medium</span></td><td class="num-col">3</td><td><span class="pill fixed">Fixed &amp; verified</span></td></tr>
+          <tr><td><span class="pill low">🟢 Low</span></td><td class="num-col">1</td><td><span class="pill fixed">Fixed &amp; verified</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="metodologi">
+    <h2><span class="num">02</span> Lingkup &amp; Metodologi</h2>
+    <p class="section-lead">Cakupan: autentikasi &amp; token JWT, otorisasi/RBAC, manajemen secret &amp; environment, konfigurasi HTTP (CORS, security headers), ketahanan brute-force, kebocoran informasi, validasi input, dan ketahanan injeksi (SQLi).</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Metode</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr><td><strong>White-box code review</strong></td><td>Telaah langsung kode jalur keamanan: <code>auth.ts</code>, <code>middleware/auth.ts</code>, <code>index.ts</code>, <code>validators.ts</code>, <code>middleware/error.ts</code>, <code>routes/*</code></td></tr>
+          <tr><td><strong>Live PoC / verification</strong></td><td>Pembuktian tiap temuan &amp; perbaikan via HTTP request (<code>curl</code>) di lingkungan lokal &amp; produksi (<code>vor-system-production.up.railway.app</code>)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="rekap">
+    <h2><span class="num">03</span> Rekapitulasi Temuan</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>ID</th><th>Judul</th><th>Severity</th><th>OWASP</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td class="idcell">SEC-01</td><td>Registrasi publik dengan role bebas → eskalasi ADMIN</td><td><span class="pill crit">Critical</span></td><td><span class="tag">A01 Broken Access Control</span></td><td><span class="pill fixed">Fixed</span></td></tr>
+          <tr><td class="idcell">SEC-02</td><td><code>JWT_SECRET</code> fallback hardcoded di repo</td><td><span class="pill high">High</span></td><td><span class="tag">A02 / A05</span></td><td><span class="pill fixed">Fixed</span></td></tr>
+          <tr><td class="idcell">SEC-03</td><td>Tidak ada rate-limit pada login (brute-force)</td><td><span class="pill high">High</span></td><td><span class="tag">A07 Auth Failures</span></td><td><span class="pill fixed">Fixed</span></td></tr>
+          <tr><td class="idcell">SEC-04</td><td>Tidak ada HTTP security headers</td><td><span class="pill med">Medium</span></td><td><span class="tag">A05 Misconfig</span></td><td><span class="pill fixed">Fixed</span></td></tr>
+          <tr><td class="idcell">SEC-05</td><td>CORS default ke <code>*</code> bila env kosong</td><td><span class="pill med">Medium</span></td><td><span class="tag">A05 Misconfig</span></td><td><span class="pill fixed">Fixed</span></td></tr>
+          <tr><td class="idcell">SEC-06</td><td>Kebocoran detail error internal (middleware auth)</td><td><span class="pill med">Medium</span></td><td><span class="tag">A05 / Info Disclosure</span></td><td><span class="pill fixed">Fixed</span></td></tr>
+          <tr><td class="idcell">SEC-07</td><td>Body request tanpa batas ukuran</td><td><span class="pill low">Low</span></td><td><span class="tag">A05 / DoS</span></td><td><span class="pill fixed">Fixed</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="detail">
+    <h2><span class="num">04</span> Detail Temuan &amp; Perbaikan</h2>
+
+    <div class="finding sev-crit">
+      <div class="fhead"><span class="fid">SEC-01</span><span class="ftitle">Registrasi publik dengan role bebas</span><span class="pill crit">Critical</span><span class="tag">A01</span></div>
+      <div class="fbody">
+        <h4>Deskripsi</h4>
+        <p>Endpoint <code>POST /api/auth/register</code> terdaftar sebagai rute <strong>publik</strong> (tanpa middleware auth). Schema menerima field <code>role</code> (<code>enum ADMIN|PLANNER|SUPERVISOR|MANAGEMENT</code>) dan controller menyimpannya apa adanya (<code>role: body.role</code>).</p>
+        <h4>Dampak</h4>
+        <p>Siapa pun di internet dapat registrasi dengan <code>"role":"ADMIN"</code> dan <strong>langsung memperoleh akun administrator</strong> — eskalasi hak akses penuh, bypass seluruh RBAC. <strong>Aktif di produksi</strong> saat ditemukan.</p>
+        <h4>Bukti (PoC)</h4>
+        <pre>POST /api/auth/register
+{ "name":"Hacker", "email":"hack@evil.com", "password":"secret123", "role":"ADMIN" }
+→ (sebelum fix) akun ADMIN terbentuk</pre>
+        <h4>Perbaikan</h4>
+        <p>Endpoint publik <code>/api/auth/register</code> <strong>dihapus</strong>. Pembuatan user kini hanya via <code>POST /api/users</code> (dilindungi <code>authMiddleware</code> + <code>roleGuard(['ADMIN'])</code>). Frontend tidak memakai endpoint register (dikonfirmasi).</p>
+        <div class="verify">✅ <strong>Verifikasi produksi:</strong> <code>POST /api/auth/register → HTTP 404</code> (endpoint tidak ada lagi)</div>
+      </div>
+    </div>
+
+    <div class="finding sev-high">
+      <div class="fhead"><span class="fid">SEC-02</span><span class="ftitle">JWT_SECRET fallback hardcoded</span><span class="pill high">High</span><span class="tag">A02/A05</span></div>
+      <div class="fbody">
+        <h4>Deskripsi</h4>
+        <p>Secret JWT memakai default hardcoded yang <strong>tercantum di kode sumber</strong>: <code>process.env.JWT_SECRET || 'vor_super_secret_jwt_key_ganti_ini_nanti'</code> — di <code>auth.ts</code> (sign) &amp; <code>middleware/auth.ts</code> (verify).</p>
+        <h4>Dampak</h4>
+        <p>Bila <code>JWT_SECRET</code> lupa di-set, aplikasi memakai secret yang <strong>diketahui publik</strong> → penyerang bisa <strong>menempa (forge) token admin</strong> yang valid. "Landmine" konfigurasi.</p>
+        <h4>Perbaikan</h4>
+        <p>Modul <code>config/env.ts</code> memvalidasi env wajib saat startup &amp; <strong>fail-fast</strong> bila kosong. Kedua fallback hardcoded dihapus.</p>
+        <div class="verify">✅ <strong>Verifikasi:</strong> start tanpa <code>JWT_SECRET</code> → <code>FATAL: ... wajib di-set</code> (server gagal start). Produksi sudah men-set secret → jalan normal; nilai tak diubah → sesi user existing tetap valid.</div>
+      </div>
+    </div>
+
+    <div class="finding sev-high">
+      <div class="fhead"><span class="fid">SEC-03</span><span class="ftitle">Tidak ada rate-limit pada login</span><span class="pill high">High</span><span class="tag">A07</span></div>
+      <div class="fbody">
+        <h4>Deskripsi</h4>
+        <p><code>POST /api/auth/login</code> tanpa pembatasan laju → <strong>brute-force password</strong> tak terbatas.</p>
+        <h4>Perbaikan</h4>
+        <p>Ditambahkan <code>express-rate-limit</code>: <strong>maks 10 percobaan / IP klien / 15 menit</strong> → HTTP 429. Karena Railway di belakang reverse proxy, <code>req.ip</code> tak stabil (menunjuk IP proxy internal yang berganti → penghitung reset); diperbaiki dengan <code>keyGenerator</code> yang mengambil IP klien dari entri paling kiri <code>X-Forwarded-For</code> + <code>trust proxy</code>.</p>
+        <div class="verify">✅ <strong>Verifikasi produksi:</strong> 12–14× login (IP sama) → req 1–10: <code>401</code>, req ke-11+: <code>429</code>. IP berbeda-beda tidak saling menghitung (kunci per-IP benar).</div>
+      </div>
+    </div>
+
+    <div class="finding sev-med">
+      <div class="fhead"><span class="fid">SEC-04</span><span class="ftitle">Tidak ada HTTP security headers</span><span class="pill med">Medium</span><span class="tag">A05</span></div>
+      <div class="fbody">
+        <h4>Deskripsi</h4>
+        <p>Respons tanpa header keamanan standar (clickjacking, MIME-sniffing, HSTS, dll).</p>
+        <h4>Perbaikan</h4>
+        <p>Ditambahkan middleware <code>helmet()</code>.</p>
+        <div class="verify">✅ <strong>Verifikasi produksi:</strong> <code>Content-Security-Policy</code>, <code>Strict-Transport-Security</code>, <code>X-Content-Type-Options: nosniff</code>, <code>X-Frame-Options: SAMEORIGIN</code> terpasang.</div>
+      </div>
+    </div>
+
+    <div class="finding sev-med">
+      <div class="fhead"><span class="fid">SEC-05</span><span class="ftitle">CORS default ke <code>*</code></span><span class="pill med">Medium</span><span class="tag">A05</span></div>
+      <div class="fbody">
+        <h4>Deskripsi</h4>
+        <p><code>origin: CORS_ORIGIN?.split(',') || '*'</code> → bila env kosong, izinkan <strong>semua origin</strong>.</p>
+        <h4>Perbaikan</h4>
+        <p>Default <code>*</code> dihapus: ada <code>CORS_ORIGIN</code> → pakai daftarnya; kosong → produksi <strong>tolak</strong> cross-origin (dev diizinkan). Produksi sudah men-set <code>CORS_ORIGIN</code>.</p>
+      </div>
+    </div>
+
+    <div class="finding sev-med">
+      <div class="fhead"><span class="fid">SEC-06</span><span class="ftitle">Kebocoran detail error internal</span><span class="pill med">Medium</span><span class="tag">A05</span></div>
+      <div class="fbody">
+        <h4>Deskripsi</h4>
+        <p>Middleware auth mengembalikan detail error internal: token invalid membalas <code>error: &lt;jwt message&gt;</code>; cabang 500 membalas <code>error: String(error)</code>.</p>
+        <h4>Perbaikan</h4>
+        <p>Respons dibuat generik tanpa detail internal.</p>
+        <div class="verify">✅ <strong>Verifikasi produksi:</strong> token invalid → <code>{"success":false,"message":"Token tidak valid"}</code> (tanpa detail).</div>
+      </div>
+    </div>
+
+    <div class="finding sev-low">
+      <div class="fhead"><span class="fid">SEC-07</span><span class="ftitle">Body request tanpa batas ukuran</span><span class="pill low">Low</span><span class="tag">A05</span></div>
+      <div class="fbody">
+        <h4>Deskripsi</h4>
+        <p><code>express.json()</code>/<code>urlencoded()</code> tanpa <code>limit</code> → potensi large-payload DoS.</p>
+        <h4>Perbaikan</h4>
+        <p>Ditetapkan batas <strong>1 MB</strong> untuk JSON &amp; urlencoded.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="positif">
+    <h2><span class="num">05</span> Temuan Positif <span style="font-weight:500;font-size:14px;color:var(--ink-3);">(kontrol yang sudah baik)</span></h2>
+    <ul class="clean">
+      <li><span class="tick">✓</span><div><strong>RBAC ditegakkan di sisi server</strong> pada semua endpoint terlindungi (bukan hanya UI) — terverifikasi pada Functional Testing.</div></li>
+      <li><span class="tick">✓</span><div><strong>Password di-hash</strong> dengan bcrypt (bukan plaintext).</div></li>
+      <li><span class="tick">✓</span><div><strong>Perlindungan SQL Injection</strong> — seluruh akses DB via Prisma ORM (query terparameterisasi), tanpa raw SQL dari input.</div></li>
+      <li><span class="tick">✓</span><div><strong>Audit log tidak membocorkan kredensial</strong> (field password disanitasi; login tidak dicatat).</div></li>
+      <li><span class="tick">✓</span><div><strong>Validasi input</strong> via Zod (<code>safeParse</code> → 400) pada endpoint mutasi.</div></li>
+      <li><span class="tick">✓</span><div><strong>Pesan login generik</strong> ("Email atau password salah") — mencegah user enumeration.</div></li>
+    </ul>
+  </section>
+
+  <section id="rekomendasi">
+    <h2><span class="num">06</span> Rekomendasi Hardening Lanjutan <span style="font-weight:500;font-size:14px;color:var(--ink-3);">(Non-Blocking · Phase 2)</span></h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>#</th><th>Rekomendasi</th><th>Prioritas</th></tr></thead>
+        <tbody>
+          <tr><td class="idcell">R-1</td><td>Audit dependensi — <code>npm audit</code> &amp; perbaiki kerentanan paket pihak ketiga berkala</td><td><span class="pill med">Sedang</span></td></tr>
+          <tr><td class="idcell">R-2</td><td>Kebijakan password lebih kuat — dari min 6 → ≥8 + kompleksitas</td><td><span class="pill med">Sedang</span></td></tr>
+          <tr><td class="idcell">R-3</td><td>Masa berlaku JWT 7 hari cukup panjang — perpendek + refresh/revoke</td><td><span class="pill med">Sedang</span></td></tr>
+          <tr><td class="idcell">R-4</td><td>Hapus kode mati (controller <code>register</code>) untuk kurangi attack surface</td><td><span class="pill low">Rendah</span></td></tr>
+          <tr><td class="idcell">R-5</td><td>Rotasi secret berkala (<code>JWT_SECRET</code> &amp; kredensial DB)</td><td><span class="pill low">Rendah</span></td></tr>
+          <tr><td class="idcell">R-6</td><td>Pertimbangkan 2FA untuk akun ADMIN</td><td><span class="pill low">Rendah</span></td></tr>
+          <tr><td class="idcell">R-7</td><td>Rate-limit pakai MemoryStore (cukup untuk 1 replika); bila scale multi-replika, gunakan store bersama (Redis)</td><td><span class="pill low">Rendah</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="kesimpulan">
+    <h2><span class="num">07</span> Kesimpulan</h2>
+    <ul class="clean">
+      <li><span class="tick">✓</span><div><strong>7 temuan (1 Critical, 2 High, 3 Medium, 1 Low) — seluruhnya diperbaiki, di-deploy, dan diverifikasi live di produksi.</strong></div></li>
+      <li><span class="tick">✓</span><div>Temuan Critical <strong>SEC-01</strong> (pembuatan akun ADMIN oleh siapa pun) <strong>telah ditutup</strong> — endpoint 404 di produksi.</div></li>
+      <li><span class="tick">✓</span><div>Kontrol fundamental (RBAC server-side, bcrypt, anti-SQLi via ORM, audit tanpa bocor kredensial) sudah baik.</div></li>
+      <li><span class="tick">✓</span><div>Deploy tanpa downtime; sesi pengguna existing tetap valid. Rekomendasi R-1…R-7 dijadwalkan Phase 2.</div></li>
+    </ul>
+    <div class="callout" style="border-left-color:var(--ok);"><strong>Status akhir:</strong> backend VOR dinyatakan aman untuk operasional, dengan rekomendasi penguatan lanjutan yang terdokumentasi.</div>
+  </section>
+
+  <hr class="divider" />
+  <footer class="doc">
+    Dokumen Security Testing internal sebelum serah-terima ke tim QA &amp; Security · VOR Fleet Management BJU · 13 Juli 2026 · Detail kredensial/secret sengaja tidak dicantumkan
+  </footer>
+</div>
