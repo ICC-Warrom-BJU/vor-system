@@ -258,6 +258,12 @@ export default function Reports() {
                       Revenue
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      BOP
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Biaya Lain
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Profit
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -276,6 +282,12 @@ export default function Reports() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         Rp {((item.metrics?.totalRevenue || 0) / 1000000).toFixed(1)}M
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-orange-600">
+                        Rp {((item.metrics?.totalBop || 0) / 1000000).toFixed(1)}M
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-orange-600">
+                        Rp {((item.metrics?.totalOther || 0) / 1000000).toFixed(1)}M
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         Rp {((item.metrics?.totalProfit || 0) / 1000000).toFixed(1)}M
@@ -305,6 +317,12 @@ export default function Reports() {
                       Revenue
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      BOP
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Biaya Lain
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Profit
                     </th>
                   </tr>
@@ -320,6 +338,12 @@ export default function Reports() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         Rp {((item.revenue || 0) / 1000000).toFixed(1)}M
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-orange-600">
+                        Rp {((item.fuel || 0) / 1000000).toFixed(1)}M
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-orange-600">
+                        Rp {((item.other || 0) / 1000000).toFixed(1)}M
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         Rp {((item.profit || 0) / 1000000).toFixed(1)}M

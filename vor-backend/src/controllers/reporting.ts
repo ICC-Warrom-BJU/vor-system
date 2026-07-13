@@ -54,7 +54,9 @@ export const getVehiclePerformanceReport = async (req: AuthRequest, res: Respons
 
       const totalTrips = revenue.reduce((sum, r) => sum + r.tripCount, 0)
       const totalRevenue = revenue.reduce((sum, r) => sum + r.totalRevenue, 0)
-      const totalExpense = revenue.reduce((sum, r) => sum + r.fuelExpense + r.otherExpense, 0)
+      const totalBop = revenue.reduce((sum, r) => sum + r.fuelExpense, 0)
+      const totalOther = revenue.reduce((sum, r) => sum + r.otherExpense, 0)
+      const totalExpense = totalBop + totalOther
       const totalProfit = revenue.reduce((sum, r) => sum + r.profit, 0)
       const paCount = actualStatuses.filter((s) => s.status.isPA).length
       const avgKPA = actualStatuses.length > 0
@@ -79,6 +81,8 @@ export const getVehiclePerformanceReport = async (req: AuthRequest, res: Respons
         metrics: {
           totalTrips,
           totalRevenue,
+          totalBop,
+          totalOther,
           totalExpense,
           totalProfit,
           profitMargin: totalRevenue > 0 ? Math.round(((totalProfit / totalRevenue) * 100) * 100) / 100 : 0,
