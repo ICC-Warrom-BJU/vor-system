@@ -24,6 +24,10 @@ interface StatusData {
   statusId: string | null
   vehicleId: string
   notes: string
+  customerId: string | null
+  driverId: string | null
+  customerName: string
+  driverName: string
 }
 
 interface RowData {
@@ -34,6 +38,8 @@ interface RowData {
   kubikasi: number | null
   customer: string
   driver: string
+  vehicleCustomerId: string | null
+  vehicleDriverId: string | null
   [key: string]: any
 }
 
@@ -94,6 +100,10 @@ export default function ActualStatus() {
     field: '',
     statusCode: '',
     noteText: '',
+    customerId: '' as string,
+    driverId: '' as string,
+    customerName: '',
+    driverName: '',
   })
   const queryClient = useQueryClient()
 
@@ -107,6 +117,33 @@ export default function ActualStatus() {
       return response.json()
     },
   })
+
+  const { data: customersData } = useQuery({
+    queryKey: ['customers'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token')
+      const response = await fetch('/api/customers', { headers: { Authorization: `Bearer ${token}` } })
+      return response.json()
+    },
+  })
+
+  const { data: driversData } = useQuery({
+    queryKey: ['drivers'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token')
+      const response = await fetch('/api/drivers', { headers: { Authorization: `Bearer ${token}` } })
+      return response.json()
+    },
+  })
+
+  const activeCustomers = useMemo(
+    () => (customersData?.data || []).filter((c: any) => c.isActive !== false),
+    [customersData?.data],
+  )
+  const activeDrivers = useMemo(
+    () => (driversData?.data || []).filter((d: any) => d.isActive !== false),
+    [driversData?.data],
+  )
 
   const daysArray = useMemo(() => {
     const selected = new Date(selectedDate)
@@ -245,19 +282,19 @@ export default function ActualStatus() {
   }, [])
 
   const closeCellEditor = useCallback(() => {
-    setCellEditor({ open: false, vehicleId: '', nopol: '', date: '', field: '', statusCode: '', noteText: '' })
+    setCellEditor({ open: false, vehicleId: '', nopol: '', date: '', field: '', statusCode: '', noteText: '', customerId: '', driverId: '', customerName: '', driverName: '' })
   }, [])
 
   const openCellEditor = useCallback(
-    (params: { vehicleId: string; nopol: string; date: string; field: string; statusCode: string; noteText: string }) => {
+    (params: { vehicleId: string; nopol: string; date: string; field: string; statusCode: string; noteText: string; customerId: string; driverId: string; customerName: string; driverName: string }) => {
       setCellEditor({ open: true, ...params })
     },
     []
   )
 
   const handleSaveCellEditor = () => {
-    const { vehicleId, nopol, date, field, statusCode, noteText } = cellEditor
-    
+    const { vehicleId, nopol, date, field, statusCode, noteText, customerId, driverId } = cellEditor
+
     // Update local notes storage
     const noteKey = getNoteKey(nopol, date)
     const nextNotes = { ...notes, [noteKey]: noteText.trim() }
@@ -268,12 +305,20 @@ export default function ActualStatus() {
     const currentRow = changedRows.get(vehicleId) || rowData.find((r: RowData) => r.vehicleId === vehicleId)
     if (!currentRow) return
 
+    // Resolve nama untuk tampilan/tooltip (fallback ke nama sebelumnya bila diarsipkan)
+    const custName = activeCustomers.find((c: any) => c.id === customerId)?.name || cellEditor.customerName || ''
+    const drvName = activeDrivers.find((d: any) => d.id === driverId)?.name || cellEditor.driverName || ''
+
     const updatedRow = recalculateSummaryFields({
       ...currentRow,
       [field]: {
         ...currentRow[field],
         status: statusCode,
         notes: noteText.trim(),
+        customerId: customerId || null,
+        driverId: driverId || null,
+        customerName: custName,
+        driverName: drvName,
       },
     })
 
@@ -310,6 +355,8 @@ export default function ActualStatus() {
         kubikasi: vehicle.kubikasi,
         customer: vehicle.customer?.name || '-',
         driver: vehicle.driver?.name || '-',
+        vehicleCustomerId: vehicle.customerId ?? vehicle.customer?.id ?? null,
+        vehicleDriverId: vehicle.driverId ?? vehicle.driver?.id ?? null,
       }
 
       statusGroups.forEach((group) => {
@@ -328,6 +375,10 @@ export default function ActualStatus() {
           statusId: status?.id || null,
           vehicleId: vehicle.id,
           notes: noteText,
+          customerId: status?.customerId ?? null,
+          driverId: status?.driverId ?? null,
+          customerName: status?.customer?.name || '',
+          driverName: status?.driver?.name || '',
         } as StatusData
 
         if (statusCode) {
@@ -428,15 +479,27 @@ export default function ActualStatus() {
 
     const hexColor = value.status ? getStatusColor(value.status) : null
     const noteText = value.notes || ''
-    const tooltipText = noteText
-      ? `${noteText}`
+
+    // Override = customer/driver hari itu berbeda dari penugasan default unit.
+    const isOverride =
+      (value.customerId != null && value.customerId !== data.vehicleCustomerId) ||
+      (value.driverId != null && value.driverId !== data.vehicleDriverId)
+
+    const tipParts: string[] = []
+    if (noteText) tipParts.push(`Catatan: ${noteText}`)
+    if (isOverride) {
+      if (value.customerName) tipParts.push(`Customer: ${value.customerName}`)
+      if (value.driverName) tipParts.push(`Driver: ${value.driverName}`)
+    }
+    const tooltipText = tipParts.length
+      ? tipParts.join('\n')
       : `${data.nopol} - ${format(new Date(value.date), 'dd MMM yyyy', { locale: id })}`
 
     // Tentukan class animasi berdasarkan isi status
     const animationClass = value.status ? 'animate-cell-ripple' : 'animate-cell-pop';
 
     return (
-      <div 
+      <div
         className={`relative h-full w-full flex items-center justify-center cursor-pointer hover:brightness-95 group overflow-hidden status-color-transition ${animationClass}`}
         title={tooltipText}
         style={hexColor ? { backgroundColor: hexColor, color: '#ffffff' } : { backgroundColor: '#f8fafc' }}
@@ -446,11 +509,18 @@ export default function ActualStatus() {
           date: value.date,
           field: colDef.field,
           statusCode: value.status || '',
-          noteText: noteText
+          noteText: noteText,
+          customerId: value.customerId ?? data.vehicleCustomerId ?? '',
+          driverId: value.driverId ?? data.vehicleDriverId ?? '',
+          customerName: value.customerName || '',
+          driverName: value.driverName || '',
         })}
       >
         {noteText ? (
           <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-white/80 shadow-sm animate-dot-bounce" />
+        ) : null}
+        {isOverride ? (
+          <span className="absolute left-1 top-1 h-2 w-2 rounded-full bg-blue-500 ring-1 ring-white/70 shadow-sm" title="Customer/Driver berbeda dari default" />
         ) : null}
         <span className="text-xs font-bold uppercase">{value.status || '-'}</span>
       </div>
@@ -572,6 +642,8 @@ export default function ActualStatus() {
               date: dayData.date,
               statusCode: dayData.status,
               notes: dayData.notes || '',
+              customerId: dayData.customerId ?? null,
+              driverId: dayData.driverId ?? null,
             })
           }
         }
@@ -681,6 +753,8 @@ export default function ActualStatus() {
             date: toDate,
             statusCode,
             notes: status.notes || '',
+            customerId: status.customerId ?? undefined,
+            driverId: status.driverId ?? undefined,
           }
         })
         .filter(Boolean)
@@ -797,6 +871,42 @@ export default function ActualStatus() {
                   ))}
                 </select>
               </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Customer</label>
+                  <select
+                    value={cellEditor.customerId}
+                    onChange={(e) => setCellEditor((prev) => ({ ...prev, customerId: e.target.value }))}
+                    className="w-full rounded-lg border border-gray-300 bg-slate-50 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
+                  >
+                    <option value="">— Tidak ada —</option>
+                    {cellEditor.customerId && !activeCustomers.some((c: any) => c.id === cellEditor.customerId) && (
+                      <option value={cellEditor.customerId}>{cellEditor.customerName || '(diarsipkan)'}</option>
+                    )}
+                    {activeCustomers.map((c: any) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Driver</label>
+                  <select
+                    value={cellEditor.driverId}
+                    onChange={(e) => setCellEditor((prev) => ({ ...prev, driverId: e.target.value }))}
+                    className="w-full rounded-lg border border-gray-300 bg-slate-50 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
+                  >
+                    <option value="">— Tidak ada —</option>
+                    {cellEditor.driverId && !activeDrivers.some((d: any) => d.id === cellEditor.driverId) && (
+                      <option value={cellEditor.driverId}>{cellEditor.driverName || '(diarsipkan)'}</option>
+                    )}
+                    {activeDrivers.map((d: any) => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <p className="-mt-2 text-[11px] text-slate-400">Default dari penugasan unit. Ubah bila hari itu berbeda (ditandai titik biru).</p>
 
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Catatan (Optional)</label>

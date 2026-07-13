@@ -9,12 +9,28 @@ const createActualStatusSchema = z.object({
   date: z.string().datetime(),
   statusCode: z.string(),
   notes: z.string().optional(),
+  customerId: z.string().nullable().optional(),
+  driverId: z.string().nullable().optional(),
 })
 
 const updateActualStatusSchema = z.object({
   statusCode: z.string(),
   notes: z.string().optional(),
+  customerId: z.string().nullable().optional(),
+  driverId: z.string().nullable().optional(),
 })
+
+// Customer/Driver di-snapshot per-hari. Bila tak dikirim (undefined), default
+// dari penugasan unit saat ini; bila dikirim (string/null), pakai apa adanya (override).
+function resolveAssignment(
+  body: { customerId?: string | null; driverId?: string | null },
+  vehicle: { customerId: string | null; driverId: string | null },
+) {
+  return {
+    customerId: body.customerId !== undefined ? body.customerId : vehicle.customerId,
+    driverId: body.driverId !== undefined ? body.driverId : vehicle.driverId,
+  }
+}
 
 export const createActualStatus = async (req: AuthRequest, res: Response) => {
   const parsed = createActualStatusSchema.safeParse(req.body)
@@ -53,12 +69,16 @@ export const createActualStatus = async (req: AuthRequest, res: Response) => {
     throw new AppError('Status sudah ada untuk vehicle dan tanggal ini', 409)
   }
 
+  const assignment = resolveAssignment(body, vehicle)
+
   const actualStatus = await prisma.actualStatus.create({
     data: {
       vehicleId: body.vehicleId,
       date: new Date(body.date),
       statusCode: body.statusCode,
       notes: body.notes,
+      customerId: assignment.customerId,
+      driverId: assignment.driverId,
       createdBy: req.user!.id,
     },
     include: {
@@ -104,6 +124,8 @@ export const updateActualStatus = async (req: AuthRequest, res: Response) => {
     data: {
       statusCode: body.statusCode,
       notes: body.notes,
+      ...(body.customerId !== undefined ? { customerId: body.customerId } : {}),
+      ...(body.driverId !== undefined ? { driverId: body.driverId } : {}),
       updatedBy: req.user!.id,
     },
     include: {
@@ -150,6 +172,8 @@ export const getActualStatusByDate = async (
     include: {
       vehicle: true,
       status: true,
+      customer: { select: { id: true, name: true } },
+      driver: { select: { id: true, name: true } },
     },
     orderBy: { vehicle: { nopol: 'asc' } },
   })
@@ -271,6 +295,14 @@ export const bulkUpdateActualStatus = async (
 
   const results = []
 
+  // Preload penugasan unit untuk auto-default customer/driver bila tidak dikirim.
+  const vehicleIds = [...new Set(updates.map((u: any) => u.vehicleId).filter(Boolean))]
+  const vehiclesForBulk = await prisma.vehicle.findMany({
+    where: { id: { in: vehicleIds as string[] } },
+    select: { id: true, customerId: true, driverId: true },
+  })
+  const vehicleMap = new Map(vehiclesForBulk.map((v) => [v.id, v]))
+
   for (const update of updates) {
     const { vehicleId, date, statusCode, notes } = update
 
@@ -283,6 +315,10 @@ export const bulkUpdateActualStatus = async (
       })
       continue
     }
+
+    const v = vehicleMap.get(vehicleId)
+    const customerId = update.customerId !== undefined ? update.customerId : v?.customerId ?? null
+    const driverId = update.driverId !== undefined ? update.driverId : v?.driverId ?? null
 
     try {
       // Find or create
@@ -300,6 +336,8 @@ export const bulkUpdateActualStatus = async (
           data: {
             statusCode,
             notes,
+            customerId,
+            driverId,
             updatedBy: req.user!.id,
           },
         })
@@ -310,6 +348,8 @@ export const bulkUpdateActualStatus = async (
             date: new Date(date),
             statusCode,
             notes,
+            customerId,
+            driverId,
             createdBy: req.user!.id,
           },
         })

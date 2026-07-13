@@ -135,14 +135,15 @@ export const deleteCustomer = async (req: AuthRequest, res: Response) => {
   if (hasVehicles) {
     return res.status(409).json({
       success: false,
-      message: 'Customer masih memiliki kendaraan, tidak bisa dihapus',
+      message: 'Customer masih memiliki kendaraan, tidak bisa diarsipkan',
     })
   }
 
-  await prisma.customer.delete({ where: { id } })
+  // Arsip (bukan hapus): jaga integritas data historis (ActualStatus merujuk customer).
+  await prisma.customer.update({ where: { id }, data: { isActive: false } })
 
   res.json({
     success: true,
-    message: 'Customer berhasil dihapus',
+    message: 'Customer berhasil diarsipkan',
   } as ApiResponse<null>)
 }

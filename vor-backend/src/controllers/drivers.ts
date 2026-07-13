@@ -141,14 +141,15 @@ export const deleteDriver = async (req: AuthRequest, res: Response) => {
   if (assignedVehicles) {
     return res.status(409).json({
       success: false,
-      message: 'Driver sedang ditugaskan, tidak bisa dihapus',
+      message: 'Driver sedang ditugaskan, tidak bisa diarsipkan',
     })
   }
 
-  await prisma.driver.delete({ where: { id } })
+  // Arsip (bukan hapus): jaga integritas data historis (ActualStatus merujuk driver).
+  await prisma.driver.update({ where: { id }, data: { isActive: false } })
 
   res.json({
     success: true,
-    message: 'Driver berhasil dihapus',
+    message: 'Driver berhasil diarsipkan',
   } as ApiResponse<null>)
 }

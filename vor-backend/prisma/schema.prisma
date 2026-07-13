@@ -70,6 +70,7 @@ model Customer {
   branch      Branch?   @relation(fields: [branchId], references: [id])
   isActive    Boolean   @default(true)
   vehicles    Vehicle[]
+  actualStatuses ActualStatus[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
@@ -89,6 +90,7 @@ model Driver {
   isActive  Boolean   @default(true)
   notes     String?
   vehicles  Vehicle[]
+  actualStatuses ActualStatus[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -120,6 +122,10 @@ model ActualStatus {
   date        DateTime
   vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
   status      MasterStatus @relation("ActualStatusMaster", fields: [statusCode], references: [code])
+  customerId  String?      // snapshot customer per-hari (default dari unit, bisa override)
+  customer    Customer?    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  driverId    String?      // snapshot driver per-hari (default dari unit, bisa override)
+  driver      Driver?      @relation(fields: [driverId], references: [id], onDelete: Restrict)
   createdBy   String
   updatedBy   String?
   createdAt   DateTime @default(now())

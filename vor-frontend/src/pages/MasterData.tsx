@@ -2,7 +2,7 @@ import { useState, useRef, useMemo } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { 
   Plus, Search, Edit2, Trash2, AlertCircle, LayoutGrid, List, Filter,
-  Truck, CheckCircle2, XCircle, Weight, Package, User 
+  Truck, CheckCircle2, XCircle, Weight, Package, User, Archive
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import AddVehicleModal from '@/components/AddVehicleModal'
@@ -1228,7 +1228,7 @@ export default function MasterData() {
                       {isAdmin && (
                         <td className="px-4 py-4 text-sm space-x-2 flex">
                           <button onClick={() => { setSelectedDriver(driver); setIsEditDriverOpen(true) }} className="text-blue-600 hover:text-blue-800"><Edit2 className="w-4 h-4" /></button>
-                          <button onClick={() => { if (confirm('Yakin ingin menghapus?')) deleteDriver.mutate(driver.id) }} className="text-red-600 hover:text-red-800"><Trash2 className="w-4 h-4" /></button>
+                          <button title="Arsipkan" onClick={() => { if (confirm('Arsipkan driver ini? Data historis tetap tersimpan; driver bisa diaktifkan kembali nanti.')) deleteDriver.mutate(driver.id) }} className="text-amber-600 hover:text-amber-800"><Archive className="w-4 h-4" /></button>
                         </td>
                       )}
                     </tr>
@@ -1269,7 +1269,7 @@ export default function MasterData() {
                       {isAdmin && (
                         <td className="px-4 py-4 text-sm space-x-2 flex">
                           <button onClick={() => { setSelectedCustomer(customer); setIsEditCustomerOpen(true) }} className="text-blue-600 hover:text-blue-800"><Edit2 className="w-4 h-4" /></button>
-                          <button onClick={() => { if (confirm('Yakin ingin menghapus?')) deleteCustomer.mutate(customer.id) }} className="text-red-600 hover:text-red-800"><Trash2 className="w-4 h-4" /></button>
+                          <button title="Arsipkan" onClick={() => { if (confirm('Arsipkan customer ini? Data historis tetap tersimpan; customer bisa diaktifkan kembali nanti.')) deleteCustomer.mutate(customer.id) }} className="text-amber-600 hover:text-amber-800"><Archive className="w-4 h-4" /></button>
                         </td>
                       )}
                     </tr>
