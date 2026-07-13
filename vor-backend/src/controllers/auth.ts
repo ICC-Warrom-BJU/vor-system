@@ -3,8 +3,8 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { AuthRequest, AppError, ApiResponse } from '../utils/types'
 import prisma from '../config/prisma'
-import { loginSchema, registerSchema, LoginRequest, RegisterRequest } from '../utils/validators'
-import { JWT_SECRET } from '../config/env'
+import { loginSchema, LoginRequest } from '../utils/validators'
+import { JWT_SECRET, JWT_EXPIRES_IN } from '../config/env'
 
 export const login = async (req: AuthRequest, res: Response) => {
   const parsed = loginSchema.safeParse(req.body)
@@ -63,7 +63,7 @@ export const login = async (req: AuthRequest, res: Response) => {
       allowedVehicleTypes: user.allowedVehicleTypes,
     },
     JWT_SECRET,
-    { expiresIn: '7d' },
+    { expiresIn: JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'] },
   )
 
   res.json({
@@ -82,77 +82,6 @@ export const login = async (req: AuthRequest, res: Response) => {
         avatarSeed: user.avatarSeed,
       },
       token,
-    },
-  } as ApiResponse<any>)
-}
-
-export const register = async (req: AuthRequest, res: Response) => {
-  const parsed = registerSchema.safeParse(req.body)
-  if (!parsed.success) {
-    return res.status(400).json({
-      success: false,
-      message: 'Validasi gagal',
-      error: parsed.error.issues,
-    })
-  }
-
-  const body: RegisterRequest = parsed.data
-
-  const existingUser = await prisma.user.findUnique({
-    where: { email: body.email },
-  })
-
-  if (existingUser) {
-    return res.status(409).json({
-      success: false,
-      message: 'Email sudah terdaftar',
-    })
-  }
-
-  const hashedPassword = await bcrypt.hash(body.password, 10)
-
-  const createData: any = {
-    name: body.name,
-    email: body.email,
-    password: hashedPassword,
-    role: body.role,
-  }
-
-  if (body.branchId) {
-    const branch = await prisma.branch.findUnique({ where: { id: body.branchId } })
-    if (!branch) {
-      throw new AppError('Cabang tidak ditemukan', 404)
-    }
-    createData.branchId = body.branchId
-    createData.cabang = branch.name
-  } else {
-    createData.cabang = body.cabang
-  }
-
-  const user = await prisma.user.create({
-    data: createData,
-    include: {
-      branch: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
-  })
-
-  res.status(201).json({
-    success: true,
-    message: 'User berhasil terdaftar',
-    data: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      cabang: user.cabang,
-      branchId: user.branchId,
-      branch: user.branch ? { id: user.branch.id, name: user.branch.name } : undefined,
-      allowedVehicleTypes: user.allowedVehicleTypes,
     },
   } as ApiResponse<any>)
 }

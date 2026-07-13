@@ -7,16 +7,6 @@ export const loginSchema = z.object({
   password: z.string().min(6, 'Password minimal 6 karakter'),
 })
 
-export const registerSchema = z.object({
-  name: z.string().min(3, 'Nama minimal 3 karakter'),
-  email: z.string().email('Email tidak valid'),
-  password: z.string().min(6, 'Password minimal 6 karakter'),
-  role: z.enum(['ADMIN', 'PLANNER', 'SUPERVISOR', 'MANAGEMENT']).default('PLANNER'),
-  cabang: z.string().optional(),
-  branchId: z.string().optional(),
-  allowedVehicleTypes: z.array(z.string()).optional(),
-})
-
 // Vehicle
 export const createVehicleSchema = z.object({
   nopol: z.string().min(1, 'Nopol tidak boleh kosong'),
@@ -123,7 +113,6 @@ export const updateGpsTrackingSchema = z.object({
 })
 
 export type LoginRequest = z.infer<typeof loginSchema>
-export type RegisterRequest = z.infer<typeof registerSchema>
 export type CreateVehicleRequest = z.infer<typeof createVehicleSchema>
 export type CreateDriverRequest = z.infer<typeof createDriverSchema>
 export type CreateCustomerRequest = z.infer<typeof createCustomerSchema>

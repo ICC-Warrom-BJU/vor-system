@@ -5,6 +5,13 @@ import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { Role } from '@prisma/client'
 
+// Kebijakan password (R-2): minimal 8 karakter + harus mengandung huruf & angka.
+const strongPassword = z
+  .string()
+  .min(8, 'Password minimal 8 karakter')
+  .regex(/[A-Za-z]/, 'Password harus mengandung huruf')
+  .regex(/[0-9]/, 'Password harus mengandung angka')
+
 const updateUserSchema = z.object({
   name: z.string().optional(),
   email: z.string().email().optional(),
@@ -17,13 +24,13 @@ const updateUserSchema = z.object({
 
 const changePasswordSchema = z.object({
   currentPassword: z.string(),
-  newPassword: z.string().min(6),
+  newPassword: strongPassword,
 })
 
 const createUserSchema = z.object({
   name: z.string(),
   email: z.string().email(),
-  password: z.string().min(6),
+  password: strongPassword,
   role: z.enum(['ADMIN', 'PLANNER', 'SUPERVISOR', 'MANAGEMENT']),
   cabang: z.string().optional(),
   branchId: z.string().optional(),
@@ -129,7 +136,11 @@ export const getCurrentUser = async (req: AuthRequest, res: Response) => {
 }
 
 export const updateUserProfile = async (req: AuthRequest, res: Response) => {
-  const body = updateUserSchema.parse(req.body)
+  const parsed = updateUserSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, message: 'Validasi gagal', error: parsed.error.issues })
+  }
+  const body = parsed.data
 
   // Check if email is already taken
   if (body.email) {
@@ -195,7 +206,11 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
 }
 
 export const changePassword = async (req: AuthRequest, res: Response) => {
-  const body = changePasswordSchema.parse(req.body)
+  const parsed = changePasswordSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, message: 'Validasi gagal', error: parsed.error.issues })
+  }
+  const body = parsed.data
 
   const user = await prisma.user.findUnique({
     where: { id: req.user!.id },
@@ -233,7 +248,11 @@ export const changePassword = async (req: AuthRequest, res: Response) => {
 
 // Admin operations
 export const createUser = async (req: AuthRequest, res: Response) => {
-  const body = createUserSchema.parse(req.body)
+  const parsed = createUserSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, message: 'Validasi gagal', error: parsed.error.issues })
+  }
+  const body = parsed.data
 
   // Check if email already exists
   const existing = await prisma.user.findUnique({
@@ -298,7 +317,11 @@ export const createUser = async (req: AuthRequest, res: Response) => {
 
 export const updateUser = async (req: AuthRequest, res: Response) => {
   const { id } = req.params
-  const body = updateUserSchema.parse(req.body)
+  const parsed = updateUserSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, message: 'Validasi gagal', error: parsed.error.issues })
+  }
+  const body = parsed.data
 
   // Check if user exists
   const user = await prisma.user.findUnique({
