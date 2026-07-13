@@ -49,12 +49,23 @@ app.use(cors({
     : process.env.NODE_ENV === 'production' ? false : true,
 }))
 
+// Ambil IP klien asli. Di Railway, req.ip (via trust proxy) bisa menunjuk IP
+// proxy internal yang berganti-ganti → kunci rate-limit tidak stabil. Entri
+// paling kiri X-Forwarded-For adalah IP klien sebenarnya & stabil per klien.
+function clientIp(req: express.Request): string {
+  const xff = req.headers['x-forwarded-for']
+  const first = Array.isArray(xff) ? xff[0] : typeof xff === 'string' ? xff.split(',')[0] : ''
+  return (first || req.ip || 'unknown').trim()
+}
+
 // Rate limit khusus login: cegah brute-force password.
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 menit
-  max: 10,                  // maks 10 percobaan per IP per window
+  max: 10,                  // maks 10 percobaan per IP klien per window
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: clientIp,
+  validate: { trustProxy: false, xForwardedForHeader: false },
   message: { success: false, message: 'Terlalu banyak percobaan login. Coba lagi dalam beberapa menit.' },
 })
 
