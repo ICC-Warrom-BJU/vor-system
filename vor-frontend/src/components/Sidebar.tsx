@@ -20,9 +20,8 @@ const menuItems = [
   { icon: CircleUser, label: 'Akun Saya', path: '/account' },
 ]
 
-const restrictedRoles = ['SUPERVISOR', 'PLANNER']
-
-const restrictedMenuPaths = ['/settings', '/audit-log']
+// Menu yang hanya boleh dilihat ADMIN (server juga menegakkan 403)
+const adminOnlyPaths = ['/settings', '/audit-log']
 
 export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const location = useLocation()
@@ -34,9 +33,9 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
     navigate('/login')
   }
 
-  const visibleMenuItems = restrictedRoles.includes(user?.role || '')
-    ? menuItems.filter((item) => !restrictedMenuPaths.includes(item.path))
-    : menuItems
+  const visibleMenuItems = menuItems.filter(
+    (item) => !(adminOnlyPaths.includes(item.path) && user?.role !== 'ADMIN')
+  )
 
   return (
     <div className={cn(

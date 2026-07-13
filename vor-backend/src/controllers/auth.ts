@@ -8,10 +8,11 @@ import { loginSchema, registerSchema, LoginRequest, RegisterRequest } from '../u
 export const login = async (req: AuthRequest, res: Response) => {
   const parsed = loginSchema.safeParse(req.body)
   if (!parsed.success) {
-    return res.status(400).json({
+    // Di halaman login, samakan semua input tidak valid dgn kegagalan kredensial
+    // agar tidak membocorkan detail validasi maupun membedakan validasi vs auth.
+    return res.status(401).json({
       success: false,
-      message: 'Validasi gagal',
-      error: parsed.error.issues,
+      message: 'Email atau password salah',
     })
   }
 

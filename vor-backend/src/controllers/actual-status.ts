@@ -17,7 +17,11 @@ const updateActualStatusSchema = z.object({
 })
 
 export const createActualStatus = async (req: AuthRequest, res: Response) => {
-  const body = createActualStatusSchema.parse(req.body)
+  const parsed = createActualStatusSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, message: 'Validasi gagal', error: parsed.error.issues })
+  }
+  const body = parsed.data
 
   // Check if vehicle exists
   const vehicle = await prisma.vehicle.findUnique({
@@ -72,7 +76,11 @@ export const createActualStatus = async (req: AuthRequest, res: Response) => {
 
 export const updateActualStatus = async (req: AuthRequest, res: Response) => {
   const { id } = req.params
-  const body = updateActualStatusSchema.parse(req.body)
+  const parsed = updateActualStatusSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, message: 'Validasi gagal', error: parsed.error.issues })
+  }
+  const body = parsed.data
 
   // Check if status code exists
   const masterStatus = await prisma.masterStatus.findUnique({

@@ -28,7 +28,11 @@ const updateGpsSchema = z.object({
 })
 
 export const createGpsTracking = async (req: AuthRequest, res: Response) => {
-  const body = createGpsSchema.parse(req.body)
+  const parsed = createGpsSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, message: 'Validasi gagal', error: parsed.error.issues })
+  }
+  const body = parsed.data
   const dateObj = new Date(body.date)
   dateObj.setHours(0, 0, 0, 0)
 
@@ -73,7 +77,11 @@ export const createGpsTracking = async (req: AuthRequest, res: Response) => {
 
 export const updateGpsTracking = async (req: AuthRequest, res: Response) => {
   const { id } = req.params
-  const body = updateGpsSchema.parse(req.body)
+  const parsed = updateGpsSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, message: 'Validasi gagal', error: parsed.error.issues })
+  }
+  const body = parsed.data
 
   const existing = await prisma.gpsTracking.findUnique({ where: { id } })
   if (!existing) {
