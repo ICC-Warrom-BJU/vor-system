@@ -7,8 +7,7 @@ import { getVehicleCabangFilter, getCabangFilter } from '../utils/cabangFilter'
 const createRevenueDataSchema = z.object({
   vehicleId: z.string(),
   date: z.string(), // Diubah agar lebih fleksibel menerima format YYYY-MM-DD atau ISO
-  deliveryOrder: z.string().optional(),
-  tripCount: z.number().min(0),
+  deliveryOrder: z.string().min(1, 'No. DO wajib diisi'), // 1 baris = 1 DO = 1 trip
   totalRevenue: z.number().min(0),
   fuelExpense: z.number().min(0),
   otherExpense: z.number().optional().default(0),
@@ -16,8 +15,7 @@ const createRevenueDataSchema = z.object({
 })
 
 const updateRevenueDataSchema = z.object({
-  deliveryOrder: z.string().optional(),
-  tripCount: z.number().min(0).optional(),
+  deliveryOrder: z.string().min(1, 'No. DO wajib diisi').optional(),
   totalRevenue: z.number().min(0).optional(),
   fuelExpense: z.number().min(0).optional(),
   otherExpense: z.number().min(0).optional(),
@@ -25,7 +23,11 @@ const updateRevenueDataSchema = z.object({
 })
 
 export const createRevenueData = async (req: AuthRequest, res: Response) => {
-  const body = createRevenueDataSchema.parse(req.body)
+  const parsed = createRevenueDataSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, message: 'Validasi gagal', error: parsed.error.issues })
+  }
+  const body = parsed.data
 
   // Pastikan tanggal dinormalisasi ke awal hari untuk menghindari masalah jam/menit
   const dateObj = new Date(body.date)
@@ -43,16 +45,17 @@ export const createRevenueData = async (req: AuthRequest, res: Response) => {
     })
   }
 
-  // Check if already exists for this vehicle and date
+  // Cegah DO ganda pada unit + tanggal yang sama
   const existing = await prisma.revenueData.findFirst({
     where: {
       vehicleId: body.vehicleId,
       date: dateObj,
+      deliveryOrder: body.deliveryOrder,
     },
   })
 
   if (existing) {
-    throw new AppError('Revenue data sudah ada untuk vehicle dan tanggal ini', 409)
+    throw new AppError(`No. DO "${body.deliveryOrder}" sudah ada untuk unit dan tanggal ini`, 409)
   }
 
   // Calculate profit
@@ -64,7 +67,7 @@ export const createRevenueData = async (req: AuthRequest, res: Response) => {
       vehicleId: body.vehicleId,
       date: dateObj,
       deliveryOrder: body.deliveryOrder,
-      tripCount: body.tripCount,
+      tripCount: 1, // 1 DO = 1 trip
       totalRevenue: body.totalRevenue,
       fuelExpense: body.fuelExpense,
       otherExpense: body.otherExpense || 0,
@@ -86,7 +89,11 @@ export const createRevenueData = async (req: AuthRequest, res: Response) => {
 
 export const updateRevenueData = async (req: AuthRequest, res: Response) => {
   const { id } = req.params
-  const body = updateRevenueDataSchema.parse(req.body)
+  const parsed = updateRevenueDataSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, message: 'Validasi gagal', error: parsed.error.issues })
+  }
+  const body = parsed.data
 
   const revenueData = await prisma.revenueData.findUnique({
     where: { id },
@@ -107,7 +114,6 @@ export const updateRevenueData = async (req: AuthRequest, res: Response) => {
     where: { id },
     data: {
       deliveryOrder: body.deliveryOrder,
-      tripCount: body.tripCount,
       totalRevenue,
       fuelExpense,
       otherExpense,
@@ -331,14 +337,14 @@ export const bulkUpdateRevenueData = async (
   const results = []
 
   for (const update of updates) {
-    const { vehicleId, date, deliveryOrder, tripCount, totalRevenue, fuelExpense, otherExpense = 0, notes } = update
+    const { vehicleId, date, deliveryOrder, totalRevenue, fuelExpense, otherExpense = 0, notes } = update
 
-    if (!vehicleId || !date || tripCount === undefined || totalRevenue === undefined || fuelExpense === undefined) {
+    if (!vehicleId || !date || !deliveryOrder || totalRevenue === undefined || fuelExpense === undefined) {
       results.push({
         vehicleId,
         date,
         success: false,
-        message: 'vehicleId, date, tripCount, totalRevenue, dan fuelExpense harus diberikan',
+        message: 'vehicleId, date, deliveryOrder, totalRevenue, dan fuelExpense harus diberikan',
       })
       continue
     }
@@ -348,11 +354,13 @@ export const bulkUpdateRevenueData = async (
       dateObj.setHours(0, 0, 0, 0)
 
       const profit = totalRevenue - (fuelExpense + otherExpense)
-      
+
+      // Upsert per (unit, tanggal, No. DO) — tiap DO = 1 baris = 1 trip
       const existing = await prisma.revenueData.findFirst({
         where: {
           vehicleId,
           date: dateObj,
+          deliveryOrder,
         },
       })
 
@@ -362,7 +370,7 @@ export const bulkUpdateRevenueData = async (
           where: { id: existing.id },
           data: {
             deliveryOrder,
-            tripCount,
+            tripCount: 1,
             totalRevenue,
             fuelExpense,
             otherExpense,
@@ -377,7 +385,7 @@ export const bulkUpdateRevenueData = async (
             vehicleId,
             date: dateObj,
             deliveryOrder,
-            tripCount,
+            tripCount: 1,
             totalRevenue,
             fuelExpense,
             otherExpense,

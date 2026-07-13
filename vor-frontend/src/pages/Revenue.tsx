@@ -16,7 +16,6 @@ export default function Revenue() {
     deliveryOrder: '',
     revenue: '',
     expense: '',
-    tripCount: '',
     notes: '',
   })
   const [loading, setLoading] = useState(false)
@@ -86,6 +85,10 @@ export default function Revenue() {
       setError('Kendaraan harus dipilih')
       return
     }
+    if (!formData.deliveryOrder.trim()) {
+      setError('No. DO harus diisi (1 DO = 1 trip)')
+      return
+    }
     if (!formData.revenue || isNaN(parseFloat(formData.revenue)) || parseFloat(formData.revenue) < 0) {
       setError('Pendapatan harus berupa angka positif')
       return
@@ -111,7 +114,6 @@ export default function Revenue() {
           deliveryOrder: formData.deliveryOrder,
           totalRevenue: parseFloat(formData.revenue),
           fuelExpense: formData.expense ? parseFloat(formData.expense) : 0,
-          tripCount: formData.tripCount ? parseInt(formData.tripCount || '0') : 0,
           notes: formData.notes,
         }),
       })
@@ -126,7 +128,6 @@ export default function Revenue() {
           deliveryOrder: '',
           revenue: '',
           expense: '',
-          tripCount: '',
           notes: '',
         })
       } else {
@@ -162,6 +163,10 @@ export default function Revenue() {
     e.preventDefault()
     if (!editItem) return
     setError('')
+    if (!editItem.deliveryOrder?.trim()) {
+      setError('No. DO harus diisi (1 DO = 1 trip)')
+      return
+    }
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
@@ -170,7 +175,6 @@ export default function Revenue() {
         totalRevenue: parseFloat(editItem.totalRevenue),
         fuelExpense: parseFloat(editItem.fuelExpense || '0'),
         otherExpense: parseFloat(editItem.otherExpense || '0'),
-        tripCount: editItem.tripCount ? parseInt(editItem.tripCount || '0') : 0,
         notes: editItem.notes || '',
       }
       const response = await fetch(`/api/revenue/${editItem.id}`, {
@@ -195,7 +199,7 @@ export default function Revenue() {
     }
   }
 
-  const revenueTemplateHeaders = ['nopol', 'date', 'deliveryOrder', 'totalRevenue', 'fuelExpense', 'otherExpense', 'tripCount', 'notes']
+  const revenueTemplateHeaders = ['nopol', 'date', 'deliveryOrder', 'totalRevenue', 'fuelExpense', 'otherExpense', 'notes']
 
   const parseCSV = (csvText: string) => {
     const text = csvText.replace(/\uFEFF/g, '').trim()
@@ -263,13 +267,12 @@ export default function Revenue() {
         totalRevenue: parseFloat(row.totalRevenue || '0'),
         fuelExpense: parseFloat(row.fuelExpense || '0'),
         otherExpense: parseFloat(row.otherExpense || '0'),
-        tripCount: parseInt(row.tripCount || '0', 10),
         notes: row.notes || '',
       }))
 
-      const invalid = updates.filter((u) => !u.vehicleId || !u.date || isNaN(u.totalRevenue))
+      const invalid = updates.filter((u) => !u.vehicleId || !u.date || !u.deliveryOrder || isNaN(u.totalRevenue))
       if (invalid.length > 0) {
-        setImportMessage(`Validasi gagal: ${invalid.length} baris memiliki nopol tidak dikenal atau data tidak lengkap.`)
+        setImportMessage(`Validasi gagal: ${invalid.length} baris memiliki nopol tidak dikenal, No. DO kosong, atau data tidak lengkap.`)
         return
       }
 
@@ -500,7 +503,6 @@ export default function Revenue() {
                               totalRevenue: item.totalRevenue.toString(),
                               fuelExpense: item.fuelExpense.toString(),
                               otherExpense: item.otherExpense.toString(),
-                              tripCount: item.tripCount?.toString() || '',
                               notes: item.notes || '',
                               deliveryOrder: item.deliveryOrder || '',
                               vehicleNopol: item.vehicle?.nopol,
@@ -621,7 +623,7 @@ export default function Revenue() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  No. Delivery Order
+                  No. Delivery Order *
                 </label>
                 <input
                   type="text"
@@ -629,7 +631,9 @@ export default function Revenue() {
                   onChange={(e) => setFormData({ ...formData, deliveryOrder: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                   placeholder="DO-001"
+                  required
                 />
+                <p className="text-xs text-gray-500 mt-1">Satu baris = satu DO = satu trip. Tambah baris lagi untuk DO berikutnya pada unit & tanggal yang sama.</p>
               </div>
 
               <div>
@@ -660,20 +664,6 @@ export default function Revenue() {
                   placeholder="2000000"
                   min="0"
                   step="1000"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Jumlah Trip
-                </label>
-                <input
-                  type="number"
-                  value={formData.tripCount}
-                  onChange={(e) => setFormData({ ...formData, tripCount: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  placeholder="3"
-                  min="0"
                 />
               </div>
 
@@ -750,7 +740,7 @@ export default function Revenue() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  No. Delivery Order
+                  No. Delivery Order *
                 </label>
                 <input
                   type="text"
@@ -758,6 +748,7 @@ export default function Revenue() {
                   onChange={(e) => setEditItem({ ...editItem, deliveryOrder: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                   placeholder="DO-001"
+                  required
                 />
               </div>
 
@@ -809,20 +800,6 @@ export default function Revenue() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Jumlah Trip
-                </label>
-                <input
-                  type="number"
-                  value={editItem.tripCount}
-                  onChange={(e) => setEditItem({ ...editItem, tripCount: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  placeholder="3"
-                  min="0"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Catatan
                 </label>
                 <textarea
@@ -867,7 +844,7 @@ export default function Revenue() {
 
             <div className="p-6 space-y-4">
               <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg text-sm">
-                Format CSV dengan kolom: <strong>nopol, date, deliveryOrder, totalRevenue, fuelExpense, otherExpense, tripCount, notes</strong>.
+                Format CSV dengan kolom: <strong>nopol, date, deliveryOrder, totalRevenue, fuelExpense, otherExpense, notes</strong>. Satu baris = satu No. DO (= 1 trip).
                 Data yang sudah ada (nopol + tanggal sama) akan diperbarui.
               </div>
 
