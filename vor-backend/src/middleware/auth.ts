@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import { AuthRequest, AppError } from '../utils/types'
 import { Role } from '@prisma/client'
+import { JWT_SECRET } from '../config/env'
 
 export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
@@ -11,7 +12,7 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
       throw new AppError(401, 'Token tidak ditemukan')
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'vor_super_secret_jwt_key_ganti_ini_nanti') as {
+    const decoded = jwt.verify(token, JWT_SECRET) as {
       id: string
       email: string
       role: Role
@@ -22,12 +23,12 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
     next()
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError) {
-      return res.status(401).json({ success: false, message: 'Token tidak valid', error: error.message })
+      return res.status(401).json({ success: false, message: 'Token tidak valid' })
     }
     if (error instanceof AppError) {
       return res.status(error.statusCode).json({ success: false, message: error.message })
     }
-    res.status(500).json({ success: false, message: 'Internal server error', error: String(error) })
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 }
 

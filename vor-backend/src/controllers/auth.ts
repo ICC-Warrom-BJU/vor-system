@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 import { AuthRequest, AppError, ApiResponse } from '../utils/types'
 import prisma from '../config/prisma'
 import { loginSchema, registerSchema, LoginRequest, RegisterRequest } from '../utils/validators'
+import { JWT_SECRET } from '../config/env'
 
 export const login = async (req: AuthRequest, res: Response) => {
   const parsed = loginSchema.safeParse(req.body)
@@ -61,7 +62,7 @@ export const login = async (req: AuthRequest, res: Response) => {
       branchId: user.branchId,
       allowedVehicleTypes: user.allowedVehicleTypes,
     },
-    process.env.JWT_SECRET || 'vor_super_secret_jwt_key_ganti_ini_nanti',
+    JWT_SECRET,
     { expiresIn: '7d' },
   )
 

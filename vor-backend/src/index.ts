@@ -1,9 +1,10 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
+import rateLimit from 'express-rate-limit'
 import { errorHandler, asyncHandler } from './middleware/error'
-import { authMiddleware } from './middleware/auth'
-import { login, register } from './controllers/auth'
+import { login } from './controllers/auth'
 
 // Import routes
 import vehicleRoutes from './routes/vehicles'
@@ -30,12 +31,32 @@ import { startGpsScheduler, logGpsStatus } from './jobs/gps-scheduler'
 const app = express()
 const PORT = process.env.PORT || 3000
 
+// Railway berada di belakang reverse proxy — percayai 1 hop agar rate-limit
+// & req.ip membaca IP klien asli dari X-Forwarded-For (bukan IP proxy).
+app.set('trust proxy', 1)
+
 // Middleware
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+app.use(helmet())
+app.use(express.json({ limit: '1mb' }))
+app.use(express.urlencoded({ extended: true, limit: '1mb' }))
+
+// CORS: pakai daftar origin dari env. Tanpa CORS_ORIGIN, JANGAN default ke '*'
+// (bahaya) — di produksi tolak cross-origin, di dev izinkan untuk kemudahan.
+const corsOrigins = process.env.CORS_ORIGIN?.split(',').map(s => s.trim()).filter(Boolean)
 app.use(cors({
-  origin: process.env.CORS_ORIGIN?.split(',').map(s => s.trim()) || '*',
+  origin: corsOrigins && corsOrigins.length
+    ? corsOrigins
+    : process.env.NODE_ENV === 'production' ? false : true,
 }))
+
+// Rate limit khusus login: cegah brute-force password.
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 menit
+  max: 10,                  // maks 10 percobaan per IP per window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Terlalu banyak percobaan login. Coba lagi dalam beberapa menit.' },
+})
 
 // Audit trail: catat semua mutasi (setelah body & sebelum route agar bisa membungkus res.json)
 app.use(auditLogger)
@@ -45,9 +66,9 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server running', timestamp: new Date() })
 })
 
-// Auth routes (public)
-app.post('/api/auth/login', asyncHandler(login))
-app.post('/api/auth/register', asyncHandler(register))
+// Auth routes (public). Register DIHAPUS dari endpoint publik (SEC-01):
+// pembuatan user hanya lewat POST /api/users (khusus ADMIN, ber-auth).
+app.post('/api/auth/login', loginLimiter, asyncHandler(login))
 
 // Protected routes
 app.use('/api/vehicles', vehicleRoutes)
