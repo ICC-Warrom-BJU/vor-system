@@ -920,16 +920,21 @@ export default function ActualStatus() {
             </div>
           </div>
           <div className="flex gap-2 lg:ml-auto flex-wrap">
-            {(masterStatuses?.data?.length ? masterStatuses.data : Object.keys(StatusColors).map((code) => ({ code }))).map((status: any) => {
-              const hexColor = getStatusColor(status.code)
+            {Array.from(
+              (masterStatuses?.data || []).reduce((groups: Map<string, any>, status: any) => {
+                if (status.groupStatus && !groups.has(status.groupStatus)) groups.set(status.groupStatus, status)
+                return groups
+              }, new Map<string, any>()).values()
+            ).map((status: any) => {
+              const hexColor = getStatusColor(status.code) || status.color
 
               return (
-                <div key={status.code} className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5">
+                <div key={status.groupStatus} className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5">
                   <div
                     className={`w-3 h-3 rounded-full ${hexColor ? '' : getStatusClassName(status.code)}`}
                     style={hexColor ? { backgroundColor: hexColor } : undefined}
                   />
-                  <span className="text-xs font-medium text-gray-700">{status.code}</span>
+                  <span className="text-xs font-medium text-gray-700">{status.groupStatus}</span>
                 </div>
               )
             })}

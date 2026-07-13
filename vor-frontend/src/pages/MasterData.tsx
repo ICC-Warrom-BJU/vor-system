@@ -130,18 +130,17 @@ const permissionList = [
   'View Everything',
 ]
 
-const StatusColors: { [key: string]: string } = {
-  UTI: 'bg-green-400 text-white',
-  RFU: 'bg-blue-400 text-white',
-  BD: 'bg-red-500 text-white',
-  C: 'bg-teal-400 text-white',
-  MB: 'bg-cyan-400 text-white',
-  RB: 'bg-sky-400 text-white',
-  AM: 'bg-orange-400 text-white',
-  BT: 'bg-orange-400 text-white',
-  TAD: 'bg-pink-400 text-white',
-  L: 'bg-gray-400 text-white',
-  AT: 'bg-slate-600 text-white',
+// Pilih warna teks kontras (hitam/putih) berdasarkan kecerahan warna latar hex
+function readableTextColor(hex?: string): string {
+  if (!hex) return '#1f2937'
+  const c = hex.replace('#', '')
+  const full = c.length === 3 ? c.split('').map((x) => x + x).join('') : c
+  const r = parseInt(full.slice(0, 2), 16)
+  const g = parseInt(full.slice(2, 4), 16)
+  const b = parseInt(full.slice(4, 6), 16)
+  if ([r, g, b].some(Number.isNaN)) return '#1f2937'
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  return luminance > 0.6 ? '#1f2937' : '#ffffff'
 }
 
 const restrictedRoles = ['SUPERVISOR', 'PLANNER']
@@ -158,7 +157,7 @@ export default function MasterData() {
 
   const [activeTab, setActiveTab] = useState<'vehicles' | 'unitTypes' | 'drivers' | 'customers' | 'status' | 'roles' | 'branches'>('vehicles')
   const [selectedBranch, setSelectedBranch] = useState('')
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('table')
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [vehicleTypeForm, setVehicleTypeForm] = useState({ id: '', name: '', description: '' })
@@ -1306,7 +1305,12 @@ export default function MasterData() {
                     {(masterStatuses?.data || []).map((status: any) => (
                       <tr key={status.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 text-sm font-medium">
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${StatusColors[status.code] || 'bg-gray-200 text-gray-800'}`}>
+                          <span
+                            className="px-3 py-1 rounded-full text-xs font-bold"
+                            style={status.color
+                              ? { backgroundColor: status.color, color: readableTextColor(status.color) }
+                              : { backgroundColor: '#e5e7eb', color: '#1f2937' }}
+                          >
                             {status.code}
                           </span>
                         </td>

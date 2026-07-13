@@ -66,10 +66,20 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "modal-fade": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        "modal-pop": {
+          from: { opacity: "0", transform: "translateY(8px) scale(0.97)" },
+          to: { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "modal-fade": "modal-fade 0.2s ease-out",
+        "modal-pop": "modal-pop 0.2s ease-out both",
       },
     },
   },
