@@ -77,6 +77,7 @@ export const login = async (req: AuthRequest, res: Response) => {
         branchId: user.branchId,
         branch: user.branch ? { id: user.branch.id, name: user.branch.name } : undefined,
         allowedVehicleTypes: user.allowedVehicleTypes,
+        avatarSeed: user.avatarSeed,
       },
       token,
     },

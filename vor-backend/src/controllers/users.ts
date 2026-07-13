@@ -12,6 +12,7 @@ const updateUserSchema = z.object({
   cabang: z.string().optional(),
   branchId: z.string().optional(),
   allowedVehicleTypes: z.array(z.string()).optional(),
+  avatarSeed: z.string().nullable().optional(),
 })
 
 const changePasswordSchema = z.object({
@@ -45,6 +46,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         },
       },
       allowedVehicleTypes: true,
+      avatarSeed: true,
       createdAt: true,
     },
     orderBy: { createdAt: 'desc' },
@@ -77,6 +79,7 @@ export const getUserById = async (req: AuthRequest, res: Response) => {
         },
       },
       allowedVehicleTypes: true,
+      avatarSeed: true,
       createdAt: true,
     },
   })
@@ -109,6 +112,7 @@ export const getCurrentUser = async (req: AuthRequest, res: Response) => {
         },
       },
       allowedVehicleTypes: true,
+      avatarSeed: true,
       createdAt: true,
     },
   })
@@ -146,6 +150,10 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
     email: body.email,
   }
 
+  if (body.avatarSeed !== undefined) {
+    updateData.avatarSeed = body.avatarSeed || null
+  }
+
   if (body.branchId) {
     const branch = await prisma.branch.findUnique({ where: { id: body.branchId } })
     if (!branch) {
@@ -174,6 +182,7 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
         },
       },
       allowedVehicleTypes: true,
+      avatarSeed: true,
       createdAt: true,
     },
   })
@@ -275,6 +284,7 @@ export const createUser = async (req: AuthRequest, res: Response) => {
         },
       },
       allowedVehicleTypes: true,
+      avatarSeed: true,
       createdAt: true,
     },
   })
@@ -351,6 +361,7 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
         },
       },
       allowedVehicleTypes: true,
+      avatarSeed: true,
       createdAt: true,
     },
   })
@@ -411,6 +422,7 @@ export const getUsersByRole = async (req: AuthRequest, res: Response) => {
         },
       },
       allowedVehicleTypes: true,
+      avatarSeed: true,
       createdAt: true,
     },
     orderBy: { createdAt: 'desc' },
