@@ -275,6 +275,9 @@ export default function Reports() {
                       Revenue
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Target Revenue
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       BOP
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -285,6 +288,9 @@ export default function Reports() {
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       KPA
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      REV. A vs T
                     </th>
                   </tr>
                 </thead>
@@ -300,6 +306,9 @@ export default function Reports() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatRp(item.metrics?.totalRevenue || 0)}
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {formatRp(item.metrics?.targetRevenue || 0)}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-orange-600">
                         {formatRp(item.metrics?.totalBop || 0)}
                       </td>
@@ -311,6 +320,9 @@ export default function Reports() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {item.kpi?.KPA?.toFixed(1)}%
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${(item.metrics?.revAchievement || 0) >= 100 ? 'text-emerald-600' : 'text-gray-600'}`}>
+                        {(item.metrics?.revAchievement || 0).toFixed(1)}%
                       </td>
                     </tr>
                   ))}

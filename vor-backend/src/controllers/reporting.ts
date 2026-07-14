@@ -81,6 +81,10 @@ export const getVehiclePerformanceReport = async (req: AuthRequest, res: Respons
         metrics: {
           totalTrips,
           totalRevenue,
+          targetRevenue: vehicle.targetRevenue ?? 0,
+          revAchievement: vehicle.targetRevenue && vehicle.targetRevenue > 0
+            ? Math.round(((totalRevenue / vehicle.targetRevenue) * 100) * 100) / 100
+            : 0,
           totalBop,
           totalOther,
           totalExpense,
