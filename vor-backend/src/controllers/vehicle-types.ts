@@ -5,7 +5,7 @@ import { ApiResponse, AuthRequest } from '../utils/types'
 
 const createVehicleTypeSchema = z.object({
   name: z.string().min(1, 'Nama tipe unit wajib diisi'),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
 })
 
 const updateVehicleTypeSchema = createVehicleTypeSchema.partial()
@@ -23,7 +23,11 @@ export const getAllVehicleTypes = async (req: AuthRequest, res: Response) => {
 }
 
 export const createVehicleType = async (req: AuthRequest, res: Response) => {
-  const body = createVehicleTypeSchema.parse(req.body)
+  const parsed = createVehicleTypeSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, message: 'Validasi gagal', error: parsed.error.issues })
+  }
+  const body = parsed.data
   const name = body.name.trim()
 
   const existing = await prisma.vehicleType.findUnique({
@@ -53,7 +57,11 @@ export const createVehicleType = async (req: AuthRequest, res: Response) => {
 
 export const updateVehicleType = async (req: AuthRequest, res: Response) => {
   const { id } = req.params
-  const body = updateVehicleTypeSchema.parse(req.body)
+  const parsed = updateVehicleTypeSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, message: 'Validasi gagal', error: parsed.error.issues })
+  }
+  const body = parsed.data
 
   const vehicleType = await prisma.vehicleType.findUnique({
     where: { id },

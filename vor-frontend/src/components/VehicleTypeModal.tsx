@@ -38,7 +38,7 @@ export default function VehicleTypeModal({ isOpen, onClose, onSuccess, editItem 
       const res = await fetch(editItem?.id ? `/api/vehicle-types/${editItem.id}` : '/api/vehicle-types', {
         method: editItem?.id ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name: name.trim(), description: description.trim() || null }),
+        body: JSON.stringify({ name: name.trim(), description: description.trim() || undefined }),
       })
       const data = await res.json()
       if (res.ok && data.success) {
