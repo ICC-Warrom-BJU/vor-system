@@ -2,7 +2,9 @@ import { useState, useRef, useMemo, useEffect } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { 
   Plus, Search, Edit2, Trash2, AlertCircle, LayoutGrid, List, Filter,
-  Truck, CheckCircle2, XCircle, Weight, Package, User, Archive
+  Truck, Weight, Package, User, Archive,
+  Container, Building2, Store, ClipboardList, ShieldCheck,
+  type LucideIcon
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import AddVehicleModal from '@/components/AddVehicleModal'
@@ -24,17 +26,17 @@ const staggerStyles = `
 interface TabContent {
   id: 'vehicles' | 'unitTypes' | 'drivers' | 'customers' | 'status' | 'roles' | 'branches'
   label: string
-  icon: string
+  icon: LucideIcon
 }
 
 const allTabs: TabContent[] = [
-  { id: 'vehicles', label: 'Armada', icon: '🚚' },
-  { id: 'unitTypes', label: 'Type Unit', icon: '🚛' },
-  { id: 'drivers', label: 'Driver', icon: '👨‍💼' },
-  { id: 'customers', label: 'Customer', icon: '🏢' },
-  { id: 'branches', label: 'Cabang', icon: '🏬' },
-  { id: 'status', label: 'Status', icon: '📋' },
-  { id: 'roles', label: 'Role & Permission', icon: '🔐' },
+  { id: 'vehicles', label: 'Armada', icon: Truck },
+  { id: 'unitTypes', label: 'Type Unit', icon: Container },
+  { id: 'drivers', label: 'Driver', icon: User },
+  { id: 'customers', label: 'Customer', icon: Building2 },
+  { id: 'branches', label: 'Cabang', icon: Store },
+  { id: 'status', label: 'Status', icon: ClipboardList },
+  { id: 'roles', label: 'Role & Permission', icon: ShieldCheck },
 ]
 
 const vehicleTemplateHeaders = [
@@ -700,16 +702,6 @@ export default function MasterData() {
     setSelectedBranch('')
   }
   
-  // Stats Calculation for Vehicles
-  const vehicleStats = useMemo(() => {
-    const data = vehicles?.data || []
-    const total = data.length
-    const aktif = data.filter((v: any) => v.isActive).length
-    const nonaktif = total - aktif
-    const totalTonase = data.reduce((acc: number, v: any) => acc + (Number(v.tonase) || 0), 0)
-    return { total, aktif, nonaktif, totalTonase }
-  }, [vehicles?.data])
-
   const counts = useMemo(() => ({
     vehicles: vehicles?.data?.length || 0,
     drivers: drivers?.data?.length || 0,
@@ -753,16 +745,6 @@ export default function MasterData() {
         )}
       </div>
 
-      {/* Stat Cards (Only for Vehicles Tab) */}
-      {activeTab === 'vehicles' && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <StatCard label="Total Armada" value={vehicleStats.total} icon={<Truck className="text-blue-600" />} color="bg-blue-50" delay="stagger-1" />
-          <StatCard label="Aktif" value={vehicleStats.aktif} icon={<CheckCircle2 className="text-emerald-600" />} color="bg-emerald-50" delay="stagger-2" />
-          <StatCard label="Nonaktif" value={vehicleStats.nonaktif} icon={<XCircle className="text-rose-600" />} color="bg-rose-50" delay="stagger-3" />
-          <StatCard label="Total Kapasitas" value={`${vehicleStats.totalTonase} Ton`} icon={<Weight className="text-amber-600" />} color="bg-amber-50" delay="stagger-4" />
-        </div>
-      )}
-
       {/* Tab Navigation */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
         <div ref={tabsNavRef} className="relative flex border-b border-gray-100 overflow-x-auto">
@@ -777,7 +759,9 @@ export default function MasterData() {
               opacity: indicator.width ? 1 : 0,
             }}
           />
-          {tabs.map((tab) => (
+          {tabs.map((tab) => {
+            const Icon = tab.icon
+            return (
             <button
               key={tab.id}
               data-tab={tab.id}
@@ -791,7 +775,7 @@ export default function MasterData() {
                   : 'text-gray-500 hover:text-gray-800'
               }`}
             >
-              <span>{tab.icon}</span>
+              <Icon className="w-4 h-4" />
               <span>{tab.label}</span>
               {counts[tab.id as keyof typeof counts] !== undefined && (
                 <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${activeTab === tab.id ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
@@ -799,7 +783,8 @@ export default function MasterData() {
                 </span>
               )}
             </button>
-          ))}
+            )
+          })}
         </div>
 
         {/* Tab Content */}
@@ -1506,22 +1491,6 @@ export default function MasterData() {
           }} status={selectedMasterStatus} />
         </>
       )}
-    </div>
-  )
-}
-
-function StatCard({ label, value, icon, color, delay = '' }: any) {
-  return (
-    <div className={`bg-white p-5 rounded-2xl border border-slate-100 shadow-sm animate-fade-up ${delay}`}>
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{label}</p>
-          <p className="text-2xl font-black text-slate-800 mt-1">{value}</p>
-        </div>
-        <div className={`p-3 rounded-xl ${color}`}>
-          {icon}
-        </div>
-      </div>
     </div>
   )
 }
