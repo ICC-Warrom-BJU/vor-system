@@ -31,4 +31,7 @@ router.get('/utilization-analysis', asyncHandler(reportingController.getUtilizat
 // Customer analysis (revenue per customer)
 router.get('/customer-analysis', asyncHandler(reportingController.getCustomerAnalysis))
 
+// Category performance (per tipe unit)
+router.get('/category-performance', asyncHandler(reportingController.getCategoryPerformanceReport))
+
 export default router

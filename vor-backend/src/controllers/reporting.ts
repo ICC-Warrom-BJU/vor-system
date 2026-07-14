@@ -695,3 +695,90 @@ export const getCustomerAnalysis = async (req: AuthRequest, res: Response) => {
     data: { dateRange: { startDate, endDate }, report, totals },
   } as ApiResponse<any>)
 }
+
+// Performa Kategori Kendaraan: metrik sama seperti Performa Kendaraan, tapi
+// diagregasi per Tipe Unit (bukan per unit).
+export const getCategoryPerformanceReport = async (req: AuthRequest, res: Response) => {
+  const { startDate, endDate, sortBy = 'revenue', branchId } = req.query
+
+  if (!startDate || !endDate) {
+    throw new AppError('Parameter startDate dan endDate harus diberikan', 400)
+  }
+  const start = new Date(startDate as string)
+  const end = new Date(endDate as string)
+  if (start > end) throw new AppError('startDate harus lebih awal dari endDate', 400)
+
+  const vehicleWhere: any = { isActive: true, ...getCabangFilter(req), ...getVehicleTypeFilter(req) }
+  if (branchId) vehicleWhere.branchId = branchId
+
+  const vehicles = await prisma.vehicle.findMany({ where: vehicleWhere })
+
+  type Agg = {
+    type: string; unitCount: number
+    totalTrips: number; totalRevenue: number; targetRevenue: number
+    totalBop: number; totalOther: number; totalProfit: number
+    paCount: number; statusTotal: number
+  }
+  const typeMap = new Map<string, Agg>()
+
+  await Promise.all(
+    vehicles.map(async (vehicle) => {
+      const revenue = await prisma.revenueData.findMany({
+        where: { vehicleId: vehicle.id, date: { gte: start, lte: end } },
+      })
+      const actualStatuses = await prisma.actualStatus.findMany({
+        where: { vehicleId: vehicle.id, date: { gte: start, lte: end } },
+        include: { status: true },
+      })
+
+      const key = vehicle.vehicleType || 'Lainnya'
+      const g = typeMap.get(key) || {
+        type: key, unitCount: 0,
+        totalTrips: 0, totalRevenue: 0, targetRevenue: 0,
+        totalBop: 0, totalOther: 0, totalProfit: 0,
+        paCount: 0, statusTotal: 0,
+      }
+      g.unitCount += 1
+      g.totalTrips += revenue.reduce((s, r) => s + r.tripCount, 0)
+      g.totalRevenue += revenue.reduce((s, r) => s + r.totalRevenue, 0)
+      g.targetRevenue += vehicle.targetRevenue ?? 0
+      g.totalBop += revenue.reduce((s, r) => s + r.fuelExpense, 0)
+      g.totalOther += revenue.reduce((s, r) => s + r.otherExpense, 0)
+      g.totalProfit += revenue.reduce((s, r) => s + r.profit, 0)
+      g.paCount += actualStatuses.filter((s) => s.status.isPA).length
+      g.statusTotal += actualStatuses.length
+      typeMap.set(key, g)
+    }),
+  )
+
+  const r2 = (n: number) => Math.round(n * 100) / 100
+  let report = Array.from(typeMap.values()).map((g) => ({
+    type: g.type,
+    unitCount: g.unitCount,
+    metrics: {
+      totalTrips: g.totalTrips,
+      totalRevenue: g.totalRevenue,
+      targetRevenue: g.targetRevenue,
+      revAchievement: g.targetRevenue > 0 ? r2((g.totalRevenue / g.targetRevenue) * 100) : 0,
+      totalBop: g.totalBop,
+      totalOther: g.totalOther,
+      totalExpense: g.totalBop + g.totalOther,
+      totalProfit: g.totalProfit,
+      profitMargin: g.totalRevenue > 0 ? r2((g.totalProfit / g.totalRevenue) * 100) : 0,
+    },
+    kpi: { KPA: g.statusTotal > 0 ? r2((g.paCount / g.statusTotal) * 100) : 0 },
+  }))
+
+  const sortMap: Record<string, (a: any, b: any) => number> = {
+    revenue: (a, b) => b.metrics.totalRevenue - a.metrics.totalRevenue,
+    profit: (a, b) => b.metrics.totalProfit - a.metrics.totalProfit,
+    trips: (a, b) => b.metrics.totalTrips - a.metrics.totalTrips,
+  }
+  report.sort(sortMap[sortBy as string] || sortMap.revenue)
+
+  res.json({
+    success: true,
+    message: 'Performa kategori kendaraan berhasil diambil',
+    data: { dateRange: { startDate, endDate }, report },
+  } as ApiResponse<any>)
+}

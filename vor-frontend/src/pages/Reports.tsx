@@ -88,6 +88,7 @@ export default function Reports() {
   })
 
   const { data: vehiclePerformance } = useQuery(queryOpts('vehiclePerformance', `/api/reports/vehicle-performance?${filterParams('sortBy=profit')}`, 'vehicle-performance'))
+  const { data: categoryPerformance } = useQuery(queryOpts('categoryPerformance', `/api/reports/category-performance?${filterParams('sortBy=revenue')}`, 'category-performance'))
   const { data: revenueAnalysis } = useQuery(queryOpts('revenueAnalysis', `/api/reports/revenue-analysis?${filterParams('groupBy=day')}`, 'revenue-analysis'))
   const { data: breakdownDetail } = useQuery(queryOpts('breakdownDetail', `/api/reports/breakdown-detail?${filterParams()}`, 'breakdown-detail'))
   const { data: unitPerformance } = useQuery(queryOpts('unitPerformance', `/api/reports/unit-performance?${filterParams()}`, 'unit-performance'))
@@ -176,6 +177,19 @@ export default function Reports() {
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4" />
                 <span>Performa Kendaraan</span>
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('category-performance')}
+              className={`px-4 py-3 border-b-2 font-medium transition-colors ${
+                activeTab === 'category-performance'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Gauge className="w-4 h-4" />
+                <span>Performa Kategori Kendaraan</span>
               </div>
             </button>
             <button
@@ -326,6 +340,47 @@ export default function Reports() {
                       </td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {activeTab === 'category-performance' && (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trip</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Target Revenue</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">BOP</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Biaya Lain</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gross Profit</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PA</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">REV. A vs T</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {categoryPerformance?.data?.report?.length > 0 ? (
+                    categoryPerformance.data.report.map((item: any) => (
+                      <tr key={item.type} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.type}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.unitCount}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.metrics?.totalTrips || 0}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatRp(item.metrics?.totalRevenue || 0)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatRp(item.metrics?.targetRevenue || 0)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-orange-600">{formatRp(item.metrics?.totalBop || 0)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-orange-600">{formatRp(item.metrics?.totalOther || 0)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{formatRp(item.metrics?.totalProfit || 0)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.kpi?.KPA?.toFixed(1)}%</td>
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${(item.metrics?.revAchievement || 0) >= 100 ? 'text-emerald-600' : 'text-gray-600'}`}>{(item.metrics?.revAchievement || 0).toFixed(1)}%</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan={10} className="px-6 py-12 text-center text-gray-500">Belum ada data pada rentang tanggal ini.</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
