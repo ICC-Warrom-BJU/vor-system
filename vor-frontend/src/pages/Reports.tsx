@@ -27,13 +27,13 @@ export default function Reports() {
 
   // Indikator tab yang meluncur: ukur posisi/lebar tab aktif.
   const tabsNavRef = useRef<HTMLElement>(null)
-  const [indicator, setIndicator] = useState({ left: 0, width: 0 })
+  const [indicator, setIndicator] = useState({ left: 0, top: 0, width: 0, height: 0 })
   useEffect(() => {
     const nav = tabsNavRef.current
     if (!nav) return
     const update = () => {
       const btn = nav.querySelector(`[data-tab="${activeTab}"]`) as HTMLElement | null
-      if (btn) setIndicator({ left: btn.offsetLeft, width: btn.offsetWidth })
+      if (btn) setIndicator({ left: btn.offsetLeft, top: btn.offsetTop, width: btn.offsetWidth, height: btn.offsetHeight })
     }
     update()
     window.addEventListener('resize', update)
@@ -191,7 +191,18 @@ export default function Reports() {
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
         <div className="border-b border-gray-100">
-          <nav ref={tabsNavRef} className="relative flex gap-4 px-4 overflow-x-auto">
+          <nav ref={tabsNavRef} className="relative flex gap-3 px-4 py-2 overflow-x-auto">
+            {/* Pill glass yang meluncur di belakang tab aktif */}
+            <span
+              className="pointer-events-none absolute z-0 rounded-xl border border-blue-400/40 bg-blue-500/10 shadow-sm backdrop-blur-sm transition-all duration-300 ease-out motion-reduce:transition-none"
+              style={{
+                left: indicator.left,
+                top: indicator.top + 5,
+                width: indicator.width,
+                height: Math.max(0, indicator.height - 10),
+                opacity: indicator.width ? 1 : 0,
+              }}
+            />
             {REPORT_TABS.map((t) => {
               const Icon = t.icon
               const active = activeTab === t.id
@@ -200,8 +211,8 @@ export default function Reports() {
                   key={t.id}
                   data-tab={t.id}
                   onClick={() => setActiveTab(t.id)}
-                  className={`px-4 py-3 font-medium whitespace-nowrap transition-colors ${
-                    active ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                  className={`relative z-10 px-4 py-2.5 rounded-xl font-medium whitespace-nowrap transition-colors ${
+                    active ? 'text-blue-700' : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -211,10 +222,6 @@ export default function Reports() {
                 </button>
               )
             })}
-            <span
-              className="pointer-events-none absolute bottom-0 h-0.5 rounded-full bg-blue-600 transition-all duration-300 ease-out motion-reduce:transition-none"
-              style={{ left: indicator.left, width: indicator.width }}
-            />
           </nav>
         </div>
 
