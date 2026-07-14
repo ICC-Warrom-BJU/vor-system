@@ -15,6 +15,8 @@ import AddCustomerModal from '@/components/AddCustomerModal'
 import EditCustomerModal from '@/components/EditCustomerModal'
 import AddMasterStatusModal from '@/components/AddMasterStatusModal'
 import EditMasterStatusModal from '@/components/EditMasterStatusModal'
+import VehicleTypeModal from '@/components/VehicleTypeModal'
+import BranchModal from '@/components/BranchModal'
 
 const staggerStyles = `
   .stagger-1 { animation-delay: 0.1s; }
@@ -176,10 +178,8 @@ export default function MasterData() {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table')
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [vehicleTypeForm, setVehicleTypeForm] = useState({ id: '', name: '', description: '' })
-  const [vehicleTypeMessage, setVehicleTypeMessage] = useState('')
-  const [branchForm, setBranchForm] = useState({ id: '', name: '', code: '', description: '' })
-  const [branchMessage, setBranchMessage] = useState('')
+  const [vehicleTypeModal, setVehicleTypeModal] = useState<{ open: boolean; edit: any }>({ open: false, edit: null })
+  const [branchModal, setBranchModal] = useState<{ open: boolean; edit: any }>({ open: false, edit: null })
   const [vehicleImportMessage, setVehicleImportMessage] = useState('')
   const [driverImportMessage, setDriverImportMessage] = useState('')
   const [isImportingVehicles, setIsImportingVehicles] = useState(false)
@@ -333,34 +333,6 @@ export default function MasterData() {
     },
   })
 
-  const saveBranch = useMutation({
-    mutationFn: async () => {
-      const token = localStorage.getItem('token')
-      const response = await fetch(branchForm.id ? `/api/branches/${branchForm.id}` : '/api/branches', {
-        method: branchForm.id ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: branchForm.name.trim(),
-          code: branchForm.code.trim() || undefined,
-          description: branchForm.description.trim() || undefined,
-        }),
-      })
-      return response.json()
-    },
-    onSuccess: (data) => {
-      if (data.success) {
-        setBranchMessage(branchForm.id ? 'Cabang berhasil diperbarui' : 'Cabang berhasil ditambahkan')
-        setBranchForm({ id: '', name: '', code: '', description: '' })
-        queryClient.invalidateQueries({ queryKey: ['branches'] })
-      } else {
-        setBranchMessage(data.message || 'Gagal menyimpan cabang')
-      }
-    },
-  })
-
   const deleteBranch = useMutation({
     mutationFn: async (id: string) => {
       const token = localStorage.getItem('token')
@@ -370,40 +342,8 @@ export default function MasterData() {
       })
       return response.json()
     },
-    onSuccess: (data) => {
-      if (data.success) {
-        setBranchMessage(data.message || 'Cabang berhasil dihapus')
-      } else {
-        setBranchMessage(data.message || 'Gagal menghapus cabang')
-      }
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branches'] })
-    },
-  })
-
-  const saveVehicleType = useMutation({
-    mutationFn: async () => {
-      const token = localStorage.getItem('token')
-      const response = await fetch(vehicleTypeForm.id ? `/api/vehicle-types/${vehicleTypeForm.id}` : '/api/vehicle-types', {
-        method: vehicleTypeForm.id ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: vehicleTypeForm.name.trim(),
-          description: vehicleTypeForm.description.trim() || undefined,
-        }),
-      })
-      return response.json()
-    },
-    onSuccess: (data) => {
-      if (data.success) {
-        setVehicleTypeMessage(vehicleTypeForm.id ? 'Tipe unit berhasil diperbarui' : 'Tipe unit berhasil ditambahkan')
-        setVehicleTypeForm({ id: '', name: '', description: '' })
-        queryClient.invalidateQueries({ queryKey: ['vehicleTypes'] })
-      } else {
-        setVehicleTypeMessage(data.message || 'Gagal menyimpan tipe unit')
-      }
     },
   })
 
@@ -416,8 +356,7 @@ export default function MasterData() {
       })
       return response.json()
     },
-    onSuccess: (data) => {
-      setVehicleTypeMessage(data.message || (data.success ? 'Tipe unit berhasil dihapus' : 'Gagal menghapus tipe unit'))
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicleTypes'] })
     },
   })
@@ -716,14 +655,15 @@ export default function MasterData() {
       <style>{staggerStyles}</style>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-800">Master Data</h1>
-        {(activeTab as string) !== 'roles' && (activeTab as string) !== 'unitTypes' && (
+        {(activeTab as string) !== 'roles' && (
           <div className="relative group">
             <button
               onClick={() => {
                 if (activeTab === 'vehicles') setIsAddVehicleOpen(true)
+                else if (activeTab === 'unitTypes') setVehicleTypeModal({ open: true, edit: null })
                 else if (activeTab === 'drivers') setIsAddDriverOpen(true)
                 else if (activeTab === 'customers') setIsAddCustomerOpen(true)
-                else if (activeTab === 'branches') setBranchForm({ id: '', name: '', code: '', description: '' })
+                else if (activeTab === 'branches') setBranchModal({ open: true, edit: null })
                 else if (activeTab === 'status' && isAdmin) setIsAddMasterStatusOpen(true)
               }}
               disabled={!isAdmin}
@@ -977,70 +917,6 @@ export default function MasterData() {
           {/* Unit Types Table */}
           {activeTab === 'unitTypes' && (
             <div className="space-y-6">
-              <div className="bg-white p-6 rounded-xl border border-gray-100">
-                <div className="flex items-center justify-between gap-4 mb-4">
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-800">{vehicleTypeForm.id ? 'Edit Type Unit' : 'Buat Type Unit'}</h2>
-                    <p className="text-sm text-gray-500">Kelola tipe unit untuk data kendaraan.</p>
-                  </div>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${isAdmin ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                    {isAdmin ? 'ADMIN' : 'Read-only'}
-                  </span>
-                </div>
-
-                {vehicleTypeMessage && (
-                  <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg">
-                    {vehicleTypeMessage}
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="md:col-span-2 space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Nama Tipe *</label>
-                      <input
-                        type="text"
-                        value={vehicleTypeForm.name}
-                        onChange={(e) => setVehicleTypeForm({ ...vehicleTypeForm, name: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                        placeholder="Contoh: Tronton, Fuso, Colt Diesel"
-                        disabled={!isAdmin}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Deskripsi</label>
-                      <textarea
-                        value={vehicleTypeForm.description}
-                        onChange={(e) => setVehicleTypeForm({ ...vehicleTypeForm, description: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                        placeholder="Deskripsi singkat tipe unit"
-                        rows={4}
-                        disabled={!isAdmin}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <button
-                      onClick={() => saveVehicleType.mutate()}
-                      disabled={!isAdmin}
-                      type="button"
-                      className="w-full px-4 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-lg hover:from-emerald-600 hover:to-cyan-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/25"
-                    >
-                      {vehicleTypeForm.id ? 'Simpan Perubahan' : 'Tambah Tipe Unit'}
-                    </button>
-                    {vehicleTypeForm.id && (
-                      <button
-                        type="button"
-                        onClick={() => setVehicleTypeForm({ id: '', name: '', description: '' })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        Batal Edit
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
               <div className="overflow-x-auto bg-white rounded-xl border border-gray-100">
                 <table className="w-full">
                   <thead className="bg-gray-50">
@@ -1058,7 +934,7 @@ export default function MasterData() {
                         {isAdmin && (
                           <td className="px-6 py-4 text-sm space-x-2 flex">
                             <button
-                              onClick={() => setVehicleTypeForm({ id: type.id, name: type.name, description: type.description || '' })}
+                              onClick={() => setVehicleTypeModal({ open: true, edit: type })}
                               className="text-blue-600 hover:text-blue-800"
                             >
                               Edit
@@ -1086,83 +962,6 @@ export default function MasterData() {
           {/* Branches Table */}
           {activeTab === 'branches' && (
             <div className="space-y-6">
-              <div className="bg-white p-6 rounded-xl border border-gray-100">
-                <div className="flex items-center justify-between gap-4 mb-4">
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-800">
-                      {branchForm.id ? 'Edit Cabang' : 'Buat Cabang'}
-                    </h2>
-                    <p className="text-sm text-gray-500">Kelola daftar cabang untuk relasi kendaraan dan user.</p>
-                  </div>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${isAdmin ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                    {isAdmin ? 'ADMIN' : 'Read-only'}
-                  </span>
-                </div>
-
-                {branchMessage && (
-                  <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg">
-                    {branchMessage}
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="md:col-span-2 space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Nama Cabang *</label>
-                      <input
-                        type="text"
-                        value={branchForm.name}
-                        onChange={(e) => setBranchForm({ ...branchForm, name: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                        placeholder="Contoh: Jakarta"
-                        disabled={!isAdmin}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Kode Cabang</label>
-                      <input
-                        type="text"
-                        value={branchForm.code}
-                        onChange={(e) => setBranchForm({ ...branchForm, code: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                        placeholder="Contoh: JKT"
-                        disabled={!isAdmin}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Deskripsi</label>
-                      <textarea
-                        value={branchForm.description}
-                        onChange={(e) => setBranchForm({ ...branchForm, description: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                        placeholder="Deskripsi singkat cabang"
-                        rows={4}
-                        disabled={!isAdmin}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <button
-                      onClick={() => saveBranch.mutate()}
-                      disabled={!isAdmin}
-                      type="button"
-                      className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {branchForm.id ? 'Simpan Perubahan' : 'Tambah Cabang'}
-                    </button>
-                    {branchForm.id && (
-                      <button
-                        type="button"
-                        onClick={() => setBranchForm({ id: '', name: '', code: '', description: '' })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        Batal Edit
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
               <div className="overflow-x-auto bg-white rounded-xl border border-gray-100">
                 <table className="w-full">
                   <thead className="bg-gray-50">
@@ -1181,7 +980,7 @@ export default function MasterData() {
                         <td className="px-6 py-4 text-sm text-gray-600">{branch.description || '-'}</td>
                         <td className="px-6 py-4 text-sm space-x-2 flex">
                           <button
-                            onClick={() => setBranchForm({ id: branch.id, name: branch.name, code: branch.code || '', description: branch.description || '' })}
+                            onClick={() => setBranchModal({ open: true, edit: branch })}
                             className="text-blue-600 hover:text-blue-800"
                           >
                             Edit
@@ -1478,6 +1277,25 @@ export default function MasterData() {
         setIsEditCustomerOpen(false)
         queryClient.invalidateQueries({ queryKey: ['customers'] })
       }} customer={selectedCustomer} branches={branches?.data} />
+
+      <VehicleTypeModal
+        isOpen={vehicleTypeModal.open}
+        editItem={vehicleTypeModal.edit}
+        onClose={() => setVehicleTypeModal({ open: false, edit: null })}
+        onSuccess={() => {
+          setVehicleTypeModal({ open: false, edit: null })
+          queryClient.invalidateQueries({ queryKey: ['vehicleTypes'] })
+        }}
+      />
+      <BranchModal
+        isOpen={branchModal.open}
+        editItem={branchModal.edit}
+        onClose={() => setBranchModal({ open: false, edit: null })}
+        onSuccess={() => {
+          setBranchModal({ open: false, edit: null })
+          queryClient.invalidateQueries({ queryKey: ['branches'] })
+        }}
+      />
 
       {isAdmin && (
         <>
