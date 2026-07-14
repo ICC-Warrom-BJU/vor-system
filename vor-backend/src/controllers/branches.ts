@@ -31,7 +31,11 @@ export const getBranchById = async (req: AuthRequest, res: Response) => {
 }
 
 export const createBranch = async (req: AuthRequest, res: Response) => {
-  const body = createBranchSchema.parse(req.body)
+  const parsed = createBranchSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, message: 'Validasi gagal', error: parsed.error.issues })
+  }
+  const body = parsed.data
 
   const existing = await prisma.branch.findUnique({ where: { name: body.name } })
   if (existing) {
@@ -55,7 +59,11 @@ export const createBranch = async (req: AuthRequest, res: Response) => {
 
 export const updateBranch = async (req: AuthRequest, res: Response) => {
   const { id } = req.params
-  const body = updateBranchSchema.parse(req.body)
+  const parsed = updateBranchSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, message: 'Validasi gagal', error: parsed.error.issues })
+  }
+  const body = parsed.data
 
   const branch = await prisma.branch.findUnique({ where: { id } })
   if (!branch) {
