@@ -287,7 +287,7 @@ export default function Reports() {
                       Gross Profit
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      KPA
+                      PA
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       REV. A vs T
@@ -432,13 +432,13 @@ export default function Reports() {
                       Tanggal
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      KPA
+                      PA
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       UA
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      PA
+                      PROD
                     </th>
                   </tr>
                 </thead>
@@ -485,7 +485,7 @@ export default function Reports() {
                       UA %
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Prod %
+                      PROD %
                     </th>
                   </tr>
                 </thead>
