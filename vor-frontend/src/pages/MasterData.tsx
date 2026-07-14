@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react'
+import { useState, useRef, useMemo, useEffect } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { 
   Plus, Search, Edit2, Trash2, AlertCircle, LayoutGrid, List, Filter,
@@ -156,6 +156,20 @@ export default function MasterData() {
     : allTabs
 
   const [activeTab, setActiveTab] = useState<'vehicles' | 'unitTypes' | 'drivers' | 'customers' | 'status' | 'roles' | 'branches'>('vehicles')
+  // Indikator tab meluncur (pill glass)
+  const tabsNavRef = useRef<HTMLDivElement>(null)
+  const [indicator, setIndicator] = useState({ left: 0, top: 0, width: 0, height: 0 })
+  useEffect(() => {
+    const nav = tabsNavRef.current
+    if (!nav) return
+    const update = () => {
+      const btn = nav.querySelector(`[data-tab="${activeTab}"]`) as HTMLElement | null
+      if (btn) setIndicator({ left: btn.offsetLeft, top: btn.offsetTop, width: btn.offsetWidth, height: btn.offsetHeight })
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [activeTab])
   const [selectedBranch, setSelectedBranch] = useState('')
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table')
   const [searchTerm, setSearchTerm] = useState('')
@@ -751,18 +765,30 @@ export default function MasterData() {
 
       {/* Tab Navigation */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        <div className="flex border-b border-gray-100 overflow-x-auto">
+        <div ref={tabsNavRef} className="relative flex border-b border-gray-100 overflow-x-auto">
+          {/* Pill glass yang meluncur di belakang tab aktif */}
+          <span
+            className="pointer-events-none absolute z-0 rounded-xl border border-blue-400/40 bg-blue-500/10 shadow-sm backdrop-blur-sm transition-all duration-300 ease-out motion-reduce:transition-none"
+            style={{
+              left: indicator.left + 4,
+              top: indicator.top + 6,
+              width: Math.max(0, indicator.width - 8),
+              height: Math.max(0, indicator.height - 12),
+              opacity: indicator.width ? 1 : 0,
+            }}
+          />
           {tabs.map((tab) => (
             <button
               key={tab.id}
+              data-tab={tab.id}
               onClick={() => {
                 setActiveTab(tab.id)
                 resetPagination()
               }}
-              className={`flex-1 min-w-max px-6 py-4 font-bold transition-all flex items-center justify-center gap-2 border-b-2 ${
+              className={`relative z-10 flex-1 min-w-max px-6 py-4 font-bold transition-colors flex items-center justify-center gap-2 ${
                 activeTab === tab.id
-                  ? 'text-blue-600 border-blue-600 bg-blue-50/50'
-                  : 'text-gray-500 border-transparent hover:text-gray-800 hover:bg-gray-50'
+                  ? 'text-blue-700'
+                  : 'text-gray-500 hover:text-gray-800'
               }`}
             >
               <span>{tab.icon}</span>
@@ -777,7 +803,7 @@ export default function MasterData() {
         </div>
 
         {/* Tab Content */}
-        <div className="p-6">
+        <div key={activeTab} className="p-6 animate-tab-enter">
           {/* Search Bar */}
           {activeTab !== 'status' && activeTab !== 'roles' && (
             <div className="mb-6 flex gap-4">
