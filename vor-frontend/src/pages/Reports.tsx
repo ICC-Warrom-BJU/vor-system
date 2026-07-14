@@ -1,9 +1,20 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Calendar, Download, TrendingUp, BarChart3, Gauge, AlertTriangle, PieChart } from 'lucide-react'
 
 // Format Rupiah lengkap dengan pemisah ribuan, mis. "Rp. 15.000.000"
 const formatRp = (n: number) => 'Rp. ' + Math.round(n || 0).toLocaleString('id-ID')
+
+const REPORT_TABS = [
+  { id: 'vehicle-performance', label: 'Performa Kendaraan', icon: TrendingUp },
+  { id: 'category-performance', label: 'Performa Kategori Kendaraan', icon: Gauge },
+  { id: 'revenue-analysis', label: 'Analisis Revenue', icon: BarChart3 },
+  { id: 'customer-analysis', label: 'Analisa Customer', icon: PieChart },
+  { id: 'kpi-trend', label: 'Trend KPI', icon: TrendingUp },
+  { id: 'unit-performance', label: 'Unit Performance', icon: Gauge },
+  { id: 'breakdown-detail', label: 'Breakdown Detail', icon: AlertTriangle },
+  { id: 'utilization-analysis', label: 'Utilisasi Analisis', icon: PieChart },
+] as const
 
 export default function Reports() {
   const [startDate, setStartDate] = useState(
@@ -13,6 +24,21 @@ export default function Reports() {
   const [activeTab, setActiveTab] = useState('vehicle-performance')
   const [vehicleType, setVehicleType] = useState('')
   const [branchId, setBranchId] = useState('')
+
+  // Indikator tab yang meluncur: ukur posisi/lebar tab aktif.
+  const tabsNavRef = useRef<HTMLElement>(null)
+  const [indicator, setIndicator] = useState({ left: 0, width: 0 })
+  useEffect(() => {
+    const nav = tabsNavRef.current
+    if (!nav) return
+    const update = () => {
+      const btn = nav.querySelector(`[data-tab="${activeTab}"]`) as HTMLElement | null
+      if (btn) setIndicator({ left: btn.offsetLeft, width: btn.offsetWidth })
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [activeTab])
 
   const filterParams = (extra = '') => {
     let q = `startDate=${startDate}&endDate=${endDate}`
@@ -165,115 +191,34 @@ export default function Reports() {
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
         <div className="border-b border-gray-100">
-          <nav className="flex gap-4 px-4">
-            <button
-              onClick={() => setActiveTab('vehicle-performance')}
-              className={`px-4 py-3 border-b-2 font-medium transition-colors ${
-                activeTab === 'vehicle-performance'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" />
-                <span>Performa Kendaraan</span>
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveTab('category-performance')}
-              className={`px-4 py-3 border-b-2 font-medium transition-colors ${
-                activeTab === 'category-performance'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Gauge className="w-4 h-4" />
-                <span>Performa Kategori Kendaraan</span>
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveTab('revenue-analysis')}
-              className={`px-4 py-3 border-b-2 font-medium transition-colors ${
-                activeTab === 'revenue-analysis'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" />
-                <span>Analisis Revenue</span>
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveTab('customer-analysis')}
-              className={`px-4 py-3 border-b-2 font-medium transition-colors ${
-                activeTab === 'customer-analysis'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <PieChart className="w-4 h-4" />
-                <span>Analisa Customer</span>
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveTab('kpi-trend')}
-              className={`px-4 py-3 border-b-2 font-medium transition-colors ${
-                activeTab === 'kpi-trend'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" />
-                <span>Trend KPI</span>
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveTab('unit-performance')}
-              className={`px-4 py-3 border-b-2 font-medium transition-colors ${
-                activeTab === 'unit-performance'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Gauge className="w-4 h-4" />
-                <span>Unit Performance</span>
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveTab('breakdown-detail')}
-              className={`px-4 py-3 border-b-2 font-medium transition-colors ${
-                activeTab === 'breakdown-detail'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4" />
-                <span>Breakdown Detail</span>
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveTab('utilization-analysis')}
-              className={`px-4 py-3 border-b-2 font-medium transition-colors ${
-                activeTab === 'utilization-analysis'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <PieChart className="w-4 h-4" />
-                <span>Utilisasi Analisis</span>
-              </div>
-            </button>
+          <nav ref={tabsNavRef} className="relative flex gap-4 px-4 overflow-x-auto">
+            {REPORT_TABS.map((t) => {
+              const Icon = t.icon
+              const active = activeTab === t.id
+              return (
+                <button
+                  key={t.id}
+                  data-tab={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className={`px-4 py-3 font-medium whitespace-nowrap transition-colors ${
+                    active ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Icon className="w-4 h-4" />
+                    <span>{t.label}</span>
+                  </div>
+                </button>
+              )
+            })}
+            <span
+              className="pointer-events-none absolute bottom-0 h-0.5 rounded-full bg-blue-600 transition-all duration-300 ease-out motion-reduce:transition-none"
+              style={{ left: indicator.left, width: indicator.width }}
+            />
           </nav>
         </div>
 
-        <div className="p-6">
+        <div key={activeTab} className="p-6 animate-tab-enter">
           {activeTab === 'vehicle-performance' && (
             <div className="overflow-x-auto">
               <table className="w-full">
